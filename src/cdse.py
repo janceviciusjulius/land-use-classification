@@ -21,15 +21,17 @@ class CDSE:
     processing_level = None
 
     def __init__(self, credentials=None):
-        '''
-            credentials(optional): (username, password) tuple used for acquiring an access token from the identity server. 
-            When unspecified, .netrc is used
-        '''
+        """
+        credentials(optional): (username, password) tuple used for acquiring an access token from the identity server.
+        When unspecified, .netrc is used
+        """
         self.__credentials = credentials
         if self.__credentials == None:
             self.__credentials = self.__get_netrc_credentials()
         if self.__credentials == None:
-            raise Exception("No credentials provided, and no credentials found in ~/.netrc")
+            raise Exception(
+                "No credentials provided, and no credentials found in ~/.netrc"
+            )
 
     def set_collection(self, collection):
         self.collection = collection
@@ -37,7 +39,14 @@ class CDSE:
     def set_processing_level(self, processing_level):
         self.processing_level = processing_level
 
-    def query(self, start_date=None, end_date=None, footprint=None, cloudcover=0, max_records=None):
+    def query(
+        self,
+        start_date=None,
+        end_date=None,
+        footprint=None,
+        cloudcover=0,
+        max_records=None,
+    ):
         self.__validate_required_params_present()
         features = []
         page = 1
@@ -49,28 +58,28 @@ class CDSE:
 
         while max_records == None or len(features) < max_records:
 
-            if footprint[0] == 'shape':
+            if footprint[0] == "shape":
                 shape = footprint[1]
                 json = requests.get(
                     f"https://catalogue.dataspace.copernicus.eu/resto/api/collections/{self.collection}/search.json?startDate={start_date}&completionDate={end_date}&geometry={shape}&productType={self.processing_level}&cloudCover=[0,{cloudcover}]&maxRecords={page_size}&page={page}"
                 ).json()
 
-            elif footprint[0] == 'tileid':
+            elif footprint[0] == "tileid":
 
                 tile_id_list = footprint[1]
-                json = {'features': [], 'properties': {'totalResults': 0}}
+                json = {"features": [], "properties": {"totalResults": 0}}
 
                 for tile_id in tile_id_list:
                     response = requests.get(
                         f"https://catalogue.dataspace.copernicus.eu/resto/api/collections/{self.collection}/search.json?startDate={start_date}&completionDate={end_date}&productType={self.processing_level}&cloudCover=[0,{cloudcover}]&maxRecords={page_size}&page={page}&tileId={tile_id}"
                     ).json()
 
-                    json['features'].extend(response.get('features', []))
+                    json["features"].extend(response.get("features", []))
 
-                    results = response.get('properties', {}).get('totalResults')
+                    results = response.get("properties", {}).get("totalResults")
 
                     if results is not None:
-                        json['properties']['totalResults'] += results
+                        json["properties"]["totalResults"] += results
 
             # print('## Query finished!')
             # print(f"# Found {len(json['features'])} results")
@@ -90,7 +99,12 @@ class CDSE:
         return features[0:(max_records)]
 
     def stream_to_dir(self, feature, dir):
-        url = feature.get("properties", {}).get("services", {}).get("download", {}).get("url")
+        url = (
+            feature.get("properties", {})
+            .get("services", {})
+            .get("download", {})
+            .get("url")
+        )
 
         if not url:
             print("No download url found in feature, skipping...")
@@ -99,36 +113,44 @@ class CDSE:
         session = self.__get_authenticated_session()
         response = session.head(url, allow_redirects=False)
         while response.status_code in range(300, 399):
-            url = response.headers['Location']
+            url = response.headers["Location"]
             response = session.head(url, allow_redirects=False)
 
         res = session.get(url, stream=True)
         res.raise_for_status()
 
         m = Message()
-        m['content-type'] = res.headers["content-disposition"]
-        filename = m.get_param('filename')
+        m["content-type"] = res.headers["content-disposition"]
+        filename = m.get_param("filename")
 
         content_length = int(res.headers["content-length"])
         progress = 0
 
         filesize = str(round(content_length / 1024 / 1024, 2)) + " MiB"
         prev_status = 0
-        with open(os.path.join(dir, filename), 'wb') as f:
+        with open(os.path.join(dir, filename), "wb") as f:
             for chunk in res.iter_content(chunk_size=1024 * 512):
                 progress += len(chunk)
                 status = round((progress / content_length) * 100, 2)
 
                 if status - prev_status > 2:
                     prev_status = status
-                    print(f"File: {filename} ({filesize})".ljust(120, '.') + f" Progress: {status}%")
+                    print(
+                        f"File: {filename} ({filesize})".ljust(120, ".")
+                        + f" Progress: {status}%"
+                    )
 
                 f.write(chunk)
         return os.path.join(dir, filename)
 
     # TODO: implement error handling to avoid crashing worker thread
     def download_feature(self, feature, dir, monitor=None):
-        url = feature.get("properties", {}).get("services", {}).get("download", {}).get("url")
+        url = (
+            feature.get("properties", {})
+            .get("services", {})
+            .get("download", {})
+            .get("url")
+        )
         if not os.path.exists(dir):
             os.makedirs(dir)
 
@@ -139,27 +161,30 @@ class CDSE:
         session = self.__get_authenticated_session()
         response = session.head(url, allow_redirects=False)
         while response.status_code in range(300, 399):
-            url = response.headers['Location']
+            url = response.headers["Location"]
             response = session.head(url, allow_redirects=False)
 
         res = session.get(url, stream=True)
         res.raise_for_status()  # :)
 
         m = Message()
-        m['content-type'] = res.headers["content-disposition"]
-        filename = m.get_param('filename')
+        m["content-type"] = res.headers["content-disposition"]
+        filename = m.get_param("filename")
 
         content_length = int(res.headers["content-length"])
         progress = 0
 
         filesize = str(round(content_length / 1024 / 1024, 2)) + " MiB"
-        with open(os.path.join(dir, filename), 'wb') as f:
+        with open(os.path.join(dir, filename), "wb") as f:
             for chunk in res.iter_content(chunk_size=1024 * 512):
                 progress += len(chunk)
                 status = round((progress / content_length) * 100, 2)
 
                 if monitor == None:
-                    print(f"File: {filename} ({filesize})".ljust(120, '.') + f" Progress: {status}%")
+                    print(
+                        f"File: {filename} ({filesize})".ljust(120, ".")
+                        + f" Progress: {status}%"
+                    )
                 else:
                     monitor.update_status(filename, filesize, status)
 
@@ -169,14 +194,20 @@ class CDSE:
     def download_features(self, feature_list, dir, num_threads=4):
         with StatusMonitor() as monitor:
             with ThreadPoolExecutor(max_workers=num_threads) as e:
-                results = e.map(self.__call, [['download_feature', feature, dir, monitor] for feature in feature_list])
+                results = e.map(
+                    self.__call,
+                    [
+                        ["download_feature", feature, dir, monitor]
+                        for feature in feature_list
+                    ],
+                )
                 result_list = [result for result in results]
         return result_list
 
     def __get_authenticated_session(self):
         session = requests.Session()
         self.__refresh_tokens()
-        session.headers.update({'Authorization': f'Bearer {self.__access_token}'})
+        session.headers.update({"Authorization": f"Bearer {self.__access_token}"})
         return session
 
     def __get_netrc_credentials(self):
@@ -190,39 +221,59 @@ class CDSE:
             return None
 
     def __refresh_tokens(self):
-        if self.__refresh_token == None or self.__refresh_token_expires < datetime.now():
+        if (
+            self.__refresh_token == None
+            or self.__refresh_token_expires < datetime.now()
+        ):
             print("Performing password token exchange..")
             res = self.__get_token(
-                {"username": self.__credentials[0], "password": self.__credentials[1], "grant_type": "password"})
+                {
+                    "username": self.__credentials[0],
+                    "password": self.__credentials[1],
+                    "grant_type": "password",
+                }
+            )
         elif self.__access_token_expires < datetime.now():
             print("Performing refresh token exchange..")
-            res = self.__get_token({"grant_type": "refresh_token", "refresh_token": self.__refresh_token})
+            res = self.__get_token(
+                {"grant_type": "refresh_token", "refresh_token": self.__refresh_token}
+            )
         else:
             return
 
         self.__access_token = res["access_token"]
-        self.__access_token_expires = datetime.now() + timedelta(seconds=res["expires_in"])
+        self.__access_token_expires = datetime.now() + timedelta(
+            seconds=res["expires_in"]
+        )
         self.__refresh_token = res["refresh_token"]
-        self.__refresh_token_expires = datetime.now() + timedelta(seconds=res["refresh_expires_in"])
+        self.__refresh_token_expires = datetime.now() + timedelta(
+            seconds=res["refresh_expires_in"]
+        )
 
     # TODO: implement __get_token as a future
     def __get_token(self, payload):
         try:
-            res = requests.post(self.__token_endpoint, data={"client_id": "cdse-public", **payload})
+            res = requests.post(
+                self.__token_endpoint, data={"client_id": "cdse-public", **payload}
+            )
             res.raise_for_status()
             return res.json()
         except Exception as e:
-            raise Exception(f"Token creation failed. Reponse from the server was: {res.json()}")
+            raise Exception(
+                f"Token creation failed. Reponse from the server was: {res.json()}"
+            )
 
     def process_footprint(footprint):
         if isinstance(footprint, list):
             # print('## Querying by tile ID')
             return ["tileid", footprint]
         elif isinstance(footprint, str):
-            print('## Querying by shape file')
+            print("## Querying by shape file")
             return ["shape", CDSE.convert_to_odata_polygon(footprint)]
         else:
-            raise Exception('## Footprint must be either path to shape file or tileid list!')
+            raise Exception(
+                "## Footprint must be either path to shape file or tileid list!"
+            )
 
     def convert_to_odata_polygon(footprint):
         try:
@@ -232,14 +283,20 @@ class CDSE:
         footprint = gpd.read_file(footprint).geometry[0]
         exterior = footprint.exterior
         coordinates = list(exterior.coords)
-        odata_str = "POLYGON((" + ", ".join(" ".join(map(str, coord)) for coord in coordinates) + "))"
-        return (odata_str)
+        odata_str = (
+            "POLYGON(("
+            + ", ".join(" ".join(map(str, coord)) for coord in coordinates)
+            + "))"
+        )
+        return odata_str
 
     def __validate_required_params_present(self):
         params = ["collection", "processing_level"]
         for param in params:
             if getattr(self, param) == None:
-                raise Exception(f"Please specify param ´{param}´ by calling CDSE#set_{param}")
+                raise Exception(
+                    f"Please specify param ´{param}´ by calling CDSE#set_{param}"
+                )
 
     def __is_interactive(self):
         return sys.stdin and sys.stdin.isatty()
@@ -254,6 +311,8 @@ class CDSE:
                 time.sleep(20)
                 continue
             break
+
+
 import time
 
 
@@ -311,7 +370,9 @@ class StatusMonitor(threading.Thread):
 
     def __format_line(self, line):
         (filename, size, progress) = line
-        return f"{filename} ({size})".ljust(self.__line_length - 7, ".") + f"{progress}%".rjust(7, ".")
+        return f"{filename} ({size})".ljust(
+            self.__line_length - 7, "."
+        ) + f"{progress}%".rjust(7, ".")
 
     def __enter__(self):
         self.start()

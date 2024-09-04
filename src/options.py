@@ -6,7 +6,7 @@ program_files_folder_name = "ProgramFiles"
 path_to_program_files = os.path.join(os.getcwd(), program_files_folder_name)
 SHP_folder_name = "ShapeFiles"
 path_to_shp_files = os.path.join(os.getcwd(), SHP_folder_name)
-coordinates_for_data_searching = os.path.join(path_to_program_files, 'map.geojson')
+coordinates_for_data_searching = os.path.join(path_to_program_files, "map.geojson")
 saving_folder_name = "Data"
 path_to_data = os.path.join(os.getcwd(), saving_folder_name)
 
@@ -32,44 +32,90 @@ FOURTH_PERCENTILE_VALUE = 95
 # Variables used for postprocessing.py
 confidence_boundary = 0.5
 
-path_to_training_ground_October = os.path.join(path_to_program_files, "training_ground_October.csv")
-path_to_validation_ground_October = os.path.join(path_to_program_files, "validation_ground_October.csv")
+path_to_training_ground_October = os.path.join(
+    path_to_program_files, "training_ground_October.csv"
+)
+path_to_validation_ground_October = os.path.join(
+    path_to_program_files, "validation_ground_October.csv"
+)
 
-path_to_training_ground_September = os.path.join(path_to_program_files, "training_ground_September.csv")
-path_to_validation_ground_September = os.path.join(path_to_program_files, "validation_ground_September.csv")
+path_to_training_ground_September = os.path.join(
+    path_to_program_files, "training_ground_September.csv"
+)
+path_to_validation_ground_September = os.path.join(
+    path_to_program_files, "validation_ground_September.csv"
+)
 
-path_to_training_ground_August = os.path.join(path_to_program_files, "training_ground_August.csv")
-path_to_validation_ground_August = os.path.join(path_to_program_files, "validation_ground_August.csv")
+path_to_training_ground_August = os.path.join(
+    path_to_program_files, "training_ground_August.csv"
+)
+path_to_validation_ground_August = os.path.join(
+    path_to_program_files, "validation_ground_August.csv"
+)
 
-path_to_training_ground_July = os.path.join(path_to_program_files, "training_ground_July.csv")
-path_to_validation_ground_July = os.path.join(path_to_program_files, "validation_ground_July.csv")
+path_to_training_ground_July = os.path.join(
+    path_to_program_files, "training_ground_July.csv"
+)
+path_to_validation_ground_July = os.path.join(
+    path_to_program_files, "validation_ground_July.csv"
+)
 
-path_to_training_ground_June = os.path.join(path_to_program_files, "training_ground_June.csv")
-path_to_validation_ground_June = os.path.join(path_to_program_files, "validation_ground_June.csv")
+path_to_training_ground_June = os.path.join(
+    path_to_program_files, "training_ground_June.csv"
+)
+path_to_validation_ground_June = os.path.join(
+    path_to_program_files, "validation_ground_June.csv"
+)
 
-path_to_training_ground_May = os.path.join(path_to_program_files, "training_ground_May.csv")
-path_to_validation_ground_May = os.path.join(path_to_program_files, "validation_ground_May.csv")
+path_to_training_ground_May = os.path.join(
+    path_to_program_files, "training_ground_May.csv"
+)
+path_to_validation_ground_May = os.path.join(
+    path_to_program_files, "validation_ground_May.csv"
+)
 
-path_to_training_ground_April = os.path.join(path_to_program_files, "training_ground_April.csv")
-path_to_validation_ground_April = os.path.join(path_to_program_files, "validation_ground_April.csv")
+path_to_training_ground_April = os.path.join(
+    path_to_program_files, "training_ground_April.csv"
+)
+path_to_validation_ground_April = os.path.join(
+    path_to_program_files, "validation_ground_April.csv"
+)
 
-path_to_training_ground_March = os.path.join(path_to_program_files, "training_ground_March.csv")
-path_to_validation_ground_March = os.path.join(path_to_program_files, "validation_ground_March.csv")
+path_to_training_ground_March = os.path.join(
+    path_to_program_files, "training_ground_March.csv"
+)
+path_to_validation_ground_March = os.path.join(
+    path_to_program_files, "validation_ground_March.csv"
+)
 
 #       WATER CLASSIFICATION
-path_to_training_data_water_regression = os.path.join(path_to_program_files, "training_water_RG.csv")
-path_to_training_data_water_classification = os.path.join(path_to_program_files, "training_water_CL.csv")
+path_to_training_data_water_regression = os.path.join(
+    path_to_program_files, "training_water_RG.csv"
+)
+path_to_training_data_water_classification = os.path.join(
+    path_to_program_files, "training_water_CL.csv"
+)
 
-path_to_validation_data_water_regression = os.path.join(path_to_program_files, "validation_water_RG.csv")
-path_to_validation_data_water_classification = os.path.join(path_to_program_files, "validation_water_CL.csv")
+path_to_validation_data_water_regression = os.path.join(
+    path_to_program_files, "validation_water_RG.csv"
+)
+path_to_validation_data_water_classification = os.path.join(
+    path_to_program_files, "validation_water_CL.csv"
+)
 
 #       URBAN CLASSIFICATION
 path_to_training_data_urban = os.path.join(path_to_program_files, "training_urban.csv")
-path_to_validation_data_urban = os.path.join(path_to_program_files, "validation_urban.csv")
+path_to_validation_data_urban = os.path.join(
+    path_to_program_files, "validation_urban.csv"
+)
 
 #       FOREST CLASSIFICATION
-path_to_training_data_forest = os.path.join(path_to_program_files, "training_forest.csv")
-path_to_validation_data_forest = os.path.join(path_to_program_files, "validation_forest.csv")
+path_to_training_data_forest = os.path.join(
+    path_to_program_files, "training_forest.csv"
+)
+path_to_validation_data_forest = os.path.join(
+    path_to_program_files, "validation_forest.csv"
+)
 
 #   User_paths
 mindaugas_path = os.path.join(path_to_data, "Mindaugas Gudas")
@@ -106,4 +152,3 @@ def return_path():
             return julius_path
     else:
         return path_to_data
-

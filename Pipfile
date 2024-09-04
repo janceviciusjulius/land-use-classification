@@ -12,10 +12,16 @@ tensorflow-metal = "*"
 geopandas = "*"
 image = "*"
 requests = "*"
+gdal = "*"
+loguru = "*"
+python-dotenv = "*"
 
 [dev-packages]
 black = "*"
 isort = "*"
+mypy = "*"
+types-requests = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.11"

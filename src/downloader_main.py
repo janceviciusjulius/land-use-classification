@@ -49,14 +49,30 @@ def request_analysis(info, size, available_count):
     # Counting available date from provided input parameters.
     print("\nData files found:", len(info))
     print("Size of the files:", size, "GB")
-    print(f"Of the {len(info)} files, {available_count} are active and available,"
-          f" {len(info) - available_count} are currently unavailable.")
-    print("NOTE: Unavailable data may become available during data download. If this happens, the data will be "
-          "downloaded.")
+    print(
+        f"Of the {len(info)} files, {available_count} are active and available,"
+        f" {len(info) - available_count} are currently unavailable."
+    )
+    print(
+        "NOTE: Unavailable data may become available during data download. If this happens, the data will be "
+        "downloaded."
+    )
 
 
-def create_folder_for_download_sentinel2(start_time, end_time, max_cloud_cover, main_folder_path):
-    dir_name = "Sentinel2 " + start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud_cover) + "%"
+def create_folder_for_download_sentinel2(
+    start_time, end_time, max_cloud_cover, main_folder_path
+):
+    dir_name = (
+        "Sentinel2 "
+        + start_time
+        + ".."
+        + end_time
+        + " "
+        + "0"
+        + "-"
+        + str(max_cloud_cover)
+        + "%"
+    )
     dir_name = os.path.join(main_folder_path, dir_name)
     os.mkdir(dir_name)
     return dir_name
@@ -105,9 +121,9 @@ def create_folder_for_all_data():
 
 
 def clear_console():
-    command = 'clear'
-    if os.name in ('nt', 'dos'):
-        command = 'cls'
+    command = "clear"
+    if os.name in ("nt", "dos"):
+        command = "cls"
     os.system(command)
 
 
@@ -136,8 +152,12 @@ def login():
         try:
             user_index = int(input("Specify an user index: "))
             if 0 < int(user_index) <= len((list(login_info.user_list))):
-                username = login_info.user_list[list(login_info.user_list)[user_index - 1]][0]
-                password = login_info.user_list[list(login_info.user_list)[user_index - 1]][1]
+                username = login_info.user_list[
+                    list(login_info.user_list)[user_index - 1]
+                ][0]
+                password = login_info.user_list[
+                    list(login_info.user_list)[user_index - 1]
+                ][1]
                 api = CDSE((username, password))
                 global CURRENT_USER
                 CURRENT_USER = list(login_info.user_list.keys())[user_index - 1]
@@ -155,20 +175,28 @@ def login():
 def form_feature_data(features):
     feature_info, general_size, online_num = {}, 0, 0
     for index, feature in enumerate(features):
-        if feature['properties']['status'].lower() == 'online':
+        if feature["properties"]["status"].lower() == "online":
             online_num += 1
-        title = feature['properties']['title']
-        is_online = feature['properties']['status']
-        feature_size = round(feature['properties']['services']['download']['size'] / 1024 / 1024 / 1024, 2)
+        title = feature["properties"]["title"]
+        is_online = feature["properties"]["status"]
+        feature_size = round(
+            feature["properties"]["services"]["download"]["size"] / 1024 / 1024 / 1024,
+            2,
+        )
         general_size += feature_size
-        feature_cloud_cover = round(feature['properties']['cloudCover'], 2)
-        coordinates = feature['geometry']['coordinates']
-        qmlg = feature['properties']['gmlgeometry']
-        date = feature['properties']['startDate'][:10].replace("-", "")
-        feature_info[title] = {"Title": title, "Date": date, "Status": is_online, "Size": feature_size,
-                               "CloudCover": feature_cloud_cover,
-                               "Coordinates": coordinates,
-                               "QMLGeometry": qmlg}
+        feature_cloud_cover = round(feature["properties"]["cloudCover"], 2)
+        coordinates = feature["geometry"]["coordinates"]
+        qmlg = feature["properties"]["gmlgeometry"]
+        date = feature["properties"]["startDate"][:10].replace("-", "")
+        feature_info[title] = {
+            "Title": title,
+            "Date": date,
+            "Status": is_online,
+            "Size": feature_size,
+            "CloudCover": feature_cloud_cover,
+            "Coordinates": coordinates,
+            "QMLGeometry": qmlg,
+        }
     return feature_info, round(general_size, 2), online_num
 
 
@@ -180,28 +208,35 @@ def create_image_for_area_covered(search_result, dir_path):
         polygon_wkt = f"POLYGON (({' ,'.join(f'{x} {y}' for x, y in coordinate)}))"
         data.append(polygon_wkt)
 
-    df = pd.DataFrame(data, columns=['geometry'])
-    df['geometry'] = df['geometry'].apply(wkt.loads)
-    gdf = gpd.GeoDataFrame(df, crs='epsg:4326')
+    df = pd.DataFrame(data, columns=["geometry"])
+    df["geometry"] = df["geometry"].apply(wkt.loads)
+    gdf = gpd.GeoDataFrame(df, crs="epsg:4326")
     try:
-        m = folium.Map(location=[54.90942, 23.91456], zoom_start=7, tiles='CartoDB positron')
+        m = folium.Map(
+            location=[54.90942, 23.91456], zoom_start=7, tiles="CartoDB positron"
+        )
         for _, r in gdf.iterrows():
-            sim_geo = gpd.GeoSeries(r['geometry']).simplify(tolerance=0.000001)
+            sim_geo = gpd.GeoSeries(r["geometry"]).simplify(tolerance=0.000001)
             geo_j = sim_geo.to_json()
-            geo_j = folium.GeoJson(data=geo_j, style_function=lambda x: {'fillColor': 'orange'})
+            geo_j = folium.GeoJson(
+                data=geo_j, style_function=lambda x: {"fillColor": "orange"}
+            )
             geo_j.add_to(m)
         img_data = m._to_png(3)
         img = Image.open(io.BytesIO(img_data))
-        img.save(os.path.join(dir_path, os.path.basename(dir_path + '.png')))
-        img.show(os.path.join(dir_path, os.path.basename(dir_path + '.png')))
-        if os.path.isfile('geckodriver.log'):
+        img.save(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
+        img.show(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
+        if os.path.isfile("geckodriver.log"):
             try:
-                os.remove('geckodriver.log')
+                os.remove("geckodriver.log")
             except PermissionError:
                 pass
     except Exception as e:
-        print("Cannot create coverage photo due to server error. If coverage photo is necessary rerunning script should"
-              "solve the problem", end="\n")
+        print(
+            "Cannot create coverage photo due to server error. If coverage photo is necessary rerunning script should"
+            "solve the problem",
+            end="\n",
+        )
         print(e)
 
 
@@ -217,11 +252,14 @@ def path_to_bands_sentinel2(zipped_dir_name, band_folder):
         dir_files = os.listdir(dir_path)
         for dir_file in dir_files:
             if dir_file.startswith("MTD") and dir_file.endswith(".xml"):
-                shutil.copyfile(os.path.join(dir_path, dir_file), os.path.join(temp_band_folder, dir_file))
+                shutil.copyfile(
+                    os.path.join(dir_path, dir_file),
+                    os.path.join(temp_band_folder, dir_file),
+                )
         # End of XML part
-        folder = os.path.join(zipped_dir_name, files[i], 'GRANULE')
+        folder = os.path.join(zipped_dir_name, files[i], "GRANULE")
         data_name = os.listdir(folder)
-        folder = os.path.join(folder, data_name[0], 'IMG_DATA')
+        folder = os.path.join(folder, data_name[0], "IMG_DATA")
         img_data = os.listdir(folder)
         if len(img_data) != 3:
             for j in range(len(img_data)):
@@ -248,14 +286,16 @@ def save_downloaded_files_id(features, start_time, end_time, max_cloud):
     for feature in features:
         title = features[feature]["Title"]
         cloud = features[feature]["CloudCover"]
-        with open(path, 'a') as f:
+        with open(path, "a") as f:
             f.write(title + "\n")
             f.write(str(cloud) + "\n")
             f.close()
     print("\nDownloaded data ID saved.\n")
 
 
-def download_data(api, features, feature_info, dir_name, start_date, end_date, max_cloud):
+def download_data(
+    api, features, feature_info, dir_name, start_date, end_date, max_cloud
+):
     # Available data downloading, creating folders, unzipping and required data extraction
     while True:
         boolean = input("\nDo you want to download the data (Y/N)? ")
@@ -265,10 +305,18 @@ def download_data(api, features, feature_info, dir_name, start_date, end_date, m
             # downloaded_list, lta_list, error_list = downloading_progress(products, dir_name)
             downloaded_list = api.download_features(features, dir_name)
             time.sleep(1)
-            save_downloaded_files_id(features=feature_info, start_time=start_date, end_time=end_date,
-                                     max_cloud=max_cloud)
-            print(f"Data download complete. Of the {len(features)} files, {len(downloaded_list)} were downloaded.")
-            print(f"Due to the server errors {len(features) - len(downloaded_list)} files could not be downloaded.")
+            save_downloaded_files_id(
+                features=feature_info,
+                start_time=start_date,
+                end_time=end_date,
+                max_cloud=max_cloud,
+            )
+            print(
+                f"Data download complete. Of the {len(features)} files, {len(downloaded_list)} were downloaded."
+            )
+            print(
+                f"Due to the server errors {len(features) - len(downloaded_list)} files could not be downloaded."
+            )
             zipped_dir_name = create_folder_for_zipping(dir_name)
             unzipping_data(dir_name, zipped_dir_name)
             delete_folder(dir_name)
@@ -292,17 +340,21 @@ def download_data(api, features, feature_info, dir_name, start_date, end_date, m
 
 def data_from_sentinel(api):
     # Getting inputs (date interval and cloud cover interval)
-    zemaitija = ['34UDG', '34VDH', '34UEG', '34VEH']
-    aukstaitija = ['34VFH', '34UFG', '35VLC', '35ULB', '35UMB', '35VMC']
-    apacia = ['34UFF', '34UFE', '35ULA', '34UGE', '35ULV', '35UMA', '35UMV']
+    zemaitija = ["34UDG", "34VDH", "34UEG", "34VEH"]
+    aukstaitija = ["34VFH", "34UFG", "35VLC", "35ULB", "35UMB", "35VMC"]
+    apacia = ["34UFF", "34UFE", "35ULA", "34UGE", "35ULV", "35UMA", "35UMV"]
     footprint = zemaitija + aukstaitija + apacia
     print("\nThe map of Lithuania has been read.\n")
     print("Sentinel-2 2A data is available from 2018 March.\n")
 
     start_time = input("Specify a search start date (YYYY-MM-DD): ")
     end_time = input("Specify a search finish date (YYYY-MM-DD): ")
-    while (end_time < start_time) or (end_time > datetime.now().strftime("%Y-%m-%d")) or (len(start_time) != 10) or \
-            (len(end_time) != 10):
+    while (
+        (end_time < start_time)
+        or (end_time > datetime.now().strftime("%Y-%m-%d"))
+        or (len(start_time) != 10)
+        or (len(end_time) != 10)
+    ):
         clear_console()
         print("Bad interval. Please re-enter the date:\n")
         start_time = input("Specify a search start date (YYYY-MM-DD): ")
@@ -310,11 +362,17 @@ def data_from_sentinel(api):
     clear_console()
     while True:
         try:
-            max_cloud_cover = int(input("Specify a maximum percentage of cloud cover (0%-100%): "))
+            max_cloud_cover = int(
+                input("Specify a maximum percentage of cloud cover (0%-100%): ")
+            )
             while not (0 <= max_cloud_cover <= 100):
                 clear_console()
-                print("The specified maximum cloud percentage is out of range or is smaller than minimum range.")
-                max_cloud_cover = int(input("\nSpecify a maximum percentage of cloud cover (0%-100%):"))
+                print(
+                    "The specified maximum cloud percentage is out of range or is smaller than minimum range."
+                )
+                max_cloud_cover = int(
+                    input("\nSpecify a maximum percentage of cloud cover (0%-100%):")
+                )
         except ValueError:
             clear_console()
             print("Invalid input format.\n")
@@ -325,59 +383,130 @@ def data_from_sentinel(api):
     api.set_processing_level("S2MSI2A")
 
     footprint = CDSE.process_footprint(footprint)
-    features = api.query(start_date=start_time, end_date=end_time, footprint=footprint, cloudcover=max_cloud_cover,
-                         max_records=None)
+    features = api.query(
+        start_date=start_time,
+        end_date=end_time,
+        footprint=footprint,
+        cloudcover=max_cloud_cover,
+        max_records=None,
+    )
     features_info, general_size, online_count = form_feature_data(features=features)
     download_process = False
     if len(features_info) == 0:
-        print("\nNo data was found according to the given criteria. Please try again providing different criteria.")
+        print(
+            "\nNo data was found according to the given criteria. Please try again providing different criteria."
+        )
         features_info, features = None, None
         data_from_sentinel(api=api)
     else:
         download_process = True
     if download_process:
-        main_folder_name = start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud_cover) + "%"
+        main_folder_name = (
+            start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud_cover) + "%"
+        )
         main_folder_path = os.path.join(data_folder, CURRENT_USER, main_folder_name)
         if not isdir(main_folder_path):
             os.mkdir(main_folder_path)
-        if not isdir(os.path.join(main_folder_path, ("Sentinel2 " + start_time + ".." + end_time + " " +
-                                                     "0" + "-" + str(max_cloud_cover) + "%"))):
-            dir_name = create_folder_for_download_sentinel2(start_time, end_time, max_cloud_cover, main_folder_path)
-            request_analysis(info=features_info, size=general_size, available_count=online_count)
+        if not isdir(
+            os.path.join(
+                main_folder_path,
+                (
+                    "Sentinel2 "
+                    + start_time
+                    + ".."
+                    + end_time
+                    + " "
+                    + "0"
+                    + "-"
+                    + str(max_cloud_cover)
+                    + "%"
+                ),
+            )
+        ):
+            dir_name = create_folder_for_download_sentinel2(
+                start_time, end_time, max_cloud_cover, main_folder_path
+            )
+            request_analysis(
+                info=features_info, size=general_size, available_count=online_count
+            )
             create_image_for_area_covered(features_info, main_folder_path)
-            interpolation = download_data(api=api, features=features, feature_info=features_info, dir_name=dir_name,
-                                          start_date=start_time, end_date=end_time, max_cloud=max_cloud_cover)
+            interpolation = download_data(
+                api=api,
+                features=features,
+                feature_info=features_info,
+                dir_name=dir_name,
+                start_date=start_time,
+                end_date=end_time,
+                max_cloud=max_cloud_cover,
+            )
         else:
-            print("\nThe same data folder exists. You can delete the folder to download the data again.")
+            print(
+                "\nThe same data folder exists. You can delete the folder to download the data again."
+            )
             while True:
                 print("NOTE: All downloaded and pre-processed data will be deleted.")
                 boolean = str(input("Do you want to delete the data (Y/N)? "))
                 if boolean.lower() == "y":
-                    raw_data_folder = ("Sentinel2 " + start_time + ".." + end_time + " " + "0" + "-" +
-                                       str(max_cloud_cover) + "%")
-                    if os.path.exists(os.path.join(main_folder_path, "Cleaned " + raw_data_folder)):
-                        shutil.rmtree(os.path.join(main_folder_path, "Cleaned " + raw_data_folder))
-                    if os.path.exists(os.path.join(main_folder_path, "Merged " + raw_data_folder)):
-                        shutil.rmtree(os.path.join(main_folder_path, "Merged " + raw_data_folder))
-                    if os.path.exists(os.path.join(main_folder_path, "Cloud " + raw_data_folder)):
-                        shutil.rmtree(os.path.join(main_folder_path, "Cloud " + raw_data_folder))
+                    raw_data_folder = (
+                        "Sentinel2 "
+                        + start_time
+                        + ".."
+                        + end_time
+                        + " "
+                        + "0"
+                        + "-"
+                        + str(max_cloud_cover)
+                        + "%"
+                    )
+                    if os.path.exists(
+                        os.path.join(main_folder_path, "Cleaned " + raw_data_folder)
+                    ):
+                        shutil.rmtree(
+                            os.path.join(main_folder_path, "Cleaned " + raw_data_folder)
+                        )
+                    if os.path.exists(
+                        os.path.join(main_folder_path, "Merged " + raw_data_folder)
+                    ):
+                        shutil.rmtree(
+                            os.path.join(main_folder_path, "Merged " + raw_data_folder)
+                        )
+                    if os.path.exists(
+                        os.path.join(main_folder_path, "Cloud " + raw_data_folder)
+                    ):
+                        shutil.rmtree(
+                            os.path.join(main_folder_path, "Cloud " + raw_data_folder)
+                        )
                     delete_folder(os.path.join(main_folder_path, raw_data_folder))
                     time.sleep(1)
-                    dir_name = create_folder_for_download_sentinel2(start_time, end_time, max_cloud_cover,
-                                                                    main_folder_path)
-                    request_analysis(info=features_info, size=general_size, available_count=online_count)
+                    dir_name = create_folder_for_download_sentinel2(
+                        start_time, end_time, max_cloud_cover, main_folder_path
+                    )
+                    request_analysis(
+                        info=features_info,
+                        size=general_size,
+                        available_count=online_count,
+                    )
                     create_image_for_area_covered(features_info, main_folder_path)
                     # interpolation = merge.ask_for_interpolation()
-                    interpolation = download_data(api=api, features=features, feature_info=features_info,
-                                                  dir_name=dir_name,
-                                                  start_date=start_time, end_date=end_time, max_cloud=max_cloud_cover)
+                    interpolation = download_data(
+                        api=api,
+                        features=features,
+                        feature_info=features_info,
+                        dir_name=dir_name,
+                        start_date=start_time,
+                        end_date=end_time,
+                        max_cloud=max_cloud_cover,
+                    )
                     break
                 elif boolean.lower() == "n":
                     print("The data is left on disk.\n")
                     break
                 else:
                     print("\nError. Please specify an answer.")
-        print("\nData downloading is completed. Data pre-processing is going to start.", end='\n')
+        print(
+            "\nData downloading is completed. Data pre-processing is going to start.",
+            end="\n",
+        )
         download_process = False
         print(dir_name, interpolation)
         return dir_name, interpolation
@@ -399,7 +528,9 @@ if __name__ == "__main__":
     ID_file_path = merge.choose_ID_file_(main_dir_adr=main_dir)
     merged_dir = merge.create_folder_for_merged_data(chosen_dir, main_dir)
     cloud_directory = merge.create_folder_for_cloud_masks(chosen_dir, main_dir)
-    merge.separate_bands_merging_for_one_package(working_dir_address, merged_dir, ID_file_path, cloud_directory)
+    merge.separate_bands_merging_for_one_package(
+        working_dir_address, merged_dir, ID_file_path, cloud_directory
+    )
     cleaned_folder = merge.create_folder_for_cleaned_data(chosen_dir, main_dir)
     merge.cleaning_data_background(merged_dir, cleaned_folder)
     merge.cloud_interpolation(cleaned_folder, interpolation_bool)
