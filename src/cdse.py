@@ -30,9 +30,7 @@ class CDSE:
         if self.__credentials == None:
             self.__credentials = self.__get_netrc_credentials()
         if self.__credentials == None:
-            raise Exception(
-                "No credentials provided, and no credentials found in ~/.netrc"
-            )
+            raise Exception("No credentials provided, and no credentials found in ~/.netrc")
 
     def set_collection(self, collection):
         self.collection = collection
@@ -100,12 +98,7 @@ class CDSE:
         return features[0:(max_records)]
 
     def stream_to_dir(self, feature, dir):
-        url = (
-            feature.get("properties", {})
-            .get("services", {})
-            .get("download", {})
-            .get("url")
-        )
+        url = feature.get("properties", {}).get("services", {}).get("download", {}).get("url")
 
         if not url:
             print("No download url found in feature, skipping...")
@@ -136,22 +129,14 @@ class CDSE:
 
                 if status - prev_status > 2:
                     prev_status = status
-                    print(
-                        f"File: {filename} ({filesize})".ljust(120, ".")
-                        + f" Progress: {status}%"
-                    )
+                    print(f"File: {filename} ({filesize})".ljust(120, ".") + f" Progress: {status}%")
 
                 f.write(chunk)
         return os.path.join(dir, filename)
 
     # TODO: implement error handling to avoid crashing worker thread
     def download_feature(self, feature, dir, monitor=None):
-        url = (
-            feature.get("properties", {})
-            .get("services", {})
-            .get("download", {})
-            .get("url")
-        )
+        url = feature.get("properties", {}).get("services", {}).get("download", {}).get("url")
         if not os.path.exists(dir):
             os.makedirs(dir)
 
@@ -182,10 +167,7 @@ class CDSE:
                 status = round((progress / content_length) * 100, 2)
 
                 if monitor == None:
-                    print(
-                        f"File: {filename} ({filesize})".ljust(120, ".")
-                        + f" Progress: {status}%"
-                    )
+                    print(f"File: {filename} ({filesize})".ljust(120, ".") + f" Progress: {status}%")
                 else:
                     monitor.update_status(filename, filesize, status)
 
@@ -197,10 +179,7 @@ class CDSE:
             with ThreadPoolExecutor(max_workers=num_threads) as e:
                 results = e.map(
                     self.__call,
-                    [
-                        ["download_feature", feature, dir, monitor]
-                        for feature in feature_list
-                    ],
+                    [["download_feature", feature, dir, monitor] for feature in feature_list],
                 )
                 result_list = [result for result in results]
         return result_list
@@ -222,10 +201,7 @@ class CDSE:
             return None
 
     def __refresh_tokens(self):
-        if (
-            self.__refresh_token == None
-            or self.__refresh_token_expires < datetime.now()
-        ):
+        if self.__refresh_token == None or self.__refresh_token_expires < datetime.now():
             print("Performing password token exchange..")
             res = self.__get_token(
                 {
@@ -236,33 +212,23 @@ class CDSE:
             )
         elif self.__access_token_expires < datetime.now():
             print("Performing refresh token exchange..")
-            res = self.__get_token(
-                {"grant_type": "refresh_token", "refresh_token": self.__refresh_token}
-            )
+            res = self.__get_token({"grant_type": "refresh_token", "refresh_token": self.__refresh_token})
         else:
             return
 
         self.__access_token = res["access_token"]
-        self.__access_token_expires = datetime.now() + timedelta(
-            seconds=res["expires_in"]
-        )
+        self.__access_token_expires = datetime.now() + timedelta(seconds=res["expires_in"])
         self.__refresh_token = res["refresh_token"]
-        self.__refresh_token_expires = datetime.now() + timedelta(
-            seconds=res["refresh_expires_in"]
-        )
+        self.__refresh_token_expires = datetime.now() + timedelta(seconds=res["refresh_expires_in"])
 
     # TODO: implement __get_token as a future
     def __get_token(self, payload):
         try:
-            res = requests.post(
-                self.__token_endpoint, data={"client_id": "cdse-public", **payload}
-            )
+            res = requests.post(self.__token_endpoint, data={"client_id": "cdse-public", **payload})
             res.raise_for_status()
             return res.json()
         except Exception as e:
-            raise Exception(
-                f"Token creation failed. Reponse from the server was: {res.json()}"
-            )
+            raise Exception(f"Token creation failed. Reponse from the server was: {res.json()}")
 
     def process_footprint(footprint):
         if isinstance(footprint, list):
@@ -272,9 +238,7 @@ class CDSE:
             print("## Querying by shape file")
             return ["shape", CDSE.convert_to_odata_polygon(footprint)]
         else:
-            raise Exception(
-                "## Footprint must be either path to shape file or tileid list!"
-            )
+            raise Exception("## Footprint must be either path to shape file or tileid list!")
 
     def convert_to_odata_polygon(footprint):
         try:
@@ -284,20 +248,14 @@ class CDSE:
         footprint = gpd.read_file(footprint).geometry[0]
         exterior = footprint.exterior
         coordinates = list(exterior.coords)
-        odata_str = (
-            "POLYGON(("
-            + ", ".join(" ".join(map(str, coord)) for coord in coordinates)
-            + "))"
-        )
+        odata_str = "POLYGON((" + ", ".join(" ".join(map(str, coord)) for coord in coordinates) + "))"
         return odata_str
 
     def __validate_required_params_present(self):
         params = ["collection", "processing_level"]
         for param in params:
             if getattr(self, param) == None:
-                raise Exception(
-                    f"Please specify param ´{param}´ by calling CDSE#set_{param}"
-                )
+                raise Exception(f"Please specify param ´{param}´ by calling CDSE#set_{param}")
 
     def __is_interactive(self):
         return sys.stdin and sys.stdin.isatty()
@@ -371,9 +329,7 @@ class StatusMonitor(threading.Thread):
 
     def __format_line(self, line):
         (filename, size, progress) = line
-        return f"{filename} ({size})".ljust(
-            self.__line_length - 7, "."
-        ) + f"{progress}%".rjust(7, ".")
+        return f"{filename} ({size})".ljust(self.__line_length - 7, ".") + f"{progress}%".rjust(7, ".")
 
     def __enter__(self):
         self.start()

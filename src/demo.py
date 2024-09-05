@@ -1,12 +1,5 @@
-def generate_parameters():
-    download_process: bool = False
-    x = 0
-    while not download_process:
+import os
 
-        print(x)
-        if x >= 10:
-            download_process = True
-        x += 1
-
-
-generate_parameters()
+os.mkdir(
+    r"/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/2024-05-05..2024-05-10 0-3%/Sentinel-2 2024-05-05..2024-05-10 0-3%"
+)

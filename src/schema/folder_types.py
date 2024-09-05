@@ -8,8 +8,17 @@ class FolderType(str, Enum):
     MOVED = "MOVED"
     MERGED = "MERGED"
     CLEANED = "CLEANED"
+    CLOUD = "CLOUD"
+    JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
 
 
-class FolderTypePrefix(str, Enum):
+class FolderPrefix(str, Enum):
     DOWNLOAD = "Sentinel-2"
+    ZIP = "ZIP"
+    MOVED = "MOVED"
+    MERGED = "MERGED"
+    CLEANED = "CLEANED"
+    CLOUD = "CLOUD"
+    JOINED = "JOINED"
+    CLASSIFIED = "CLASSIFIED"

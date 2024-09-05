@@ -2,15 +2,15 @@ import os
 from datetime import datetime
 from os.path import isdir
 from time import perf_counter
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dotenv import load_dotenv
 from loguru import logger
 
 from cdse import CDSE
-from schema.root_folders import RootFolders
-from schema.folder_types import FolderType, FolderTypePrefix
 from schema.downloader_info import DownloadInfo
+from schema.folder_types import FolderPrefix, FolderType
+from schema.root_folders import RootFolders
 from shared import Shared
 
 load_dotenv()
@@ -39,33 +39,21 @@ class Downloader:
         api = self._login()
         info: Dict[str, Any] = self._generate_parameters(api=api)
 
-        main_folder_path = os.path.join(
-            self.shared.root_folders[RootFolders.DATA_FOLDER],
-            self.shared.generate_folder_name(
-                start_date=self.start_date,
-                end_date=self.end_date,
-                max_cloud_cover=self.max_cloud_cover,
-            ),
+        self.folders: Dict[FolderType, str] = self.shared.generate_folders(
+            start_date=self.start_date,
+            end_date=self.end_date,
+            cloud_cover=self.max_cloud_cover,
         )
-        self.folders[FolderType.PARENT] = self.shared.create_folder(
-            path=main_folder_path
-        )
-        download_folder_exists, download_folder_path = (
-            self.shared.check_if_data_folder_exists(
-                folder=self.folders[FolderType.PARENT],
-                start_date=self.start_date,
-                end_date=self.end_date,
-                max_cloud_cover=self.max_cloud_cover,
-                folder_type_prefix=FolderTypePrefix.DOWNLOAD,
-            )
-        )
-        if download_folder_exists:
-            self.shared.ask_deletion(folder_path=download_folder_path)
-        self._request_analysis(
-                files=info[DownloadInfo.FEATURES_INFO],
-                size=info[DownloadInfo.GENERAL_SIZE],
-                available_count=info[DownloadInfo.ONLINE_COUNT],
-            )
+
+        self.shared.check_if_data_folder_exists(folders=self.folders, scenario=FolderType.DOWNLOAD)
+
+        # if download_folder_exists:
+        #     self.shared.ask_deletion(folder_path=download_folder_path)
+        # self._request_analysis(
+        #         files=info[DownloadInfo.FEATURES_INFO],
+        #         size=info[DownloadInfo.GENERAL_SIZE],
+        #         available_count=info[DownloadInfo.ONLINE_COUNT],
+        #     )
 
     @staticmethod
     def _request_analysis(files, size, available_count):
@@ -95,13 +83,9 @@ class Downloader:
                 max_records=None,
             )
 
-            features_info, general_size, online_count = self._form_feature_data(
-                features=features
-            )
+            features_info, general_size, online_count = self._form_feature_data(features=features)
             if len(features_info) == 0:
-                logger.error(
-                    "No data was found according to the given criteria. Please try again."
-                )
+                logger.error("No data was found according to the given criteria. Please try again.")
             else:
                 download_process = True
         return {
@@ -116,7 +100,7 @@ class Downloader:
         username: str = os.environ.get("USERNAME")
         password: str = os.environ.get("PASSWORD")
 
-        api: CDSE =  CDSE((username, password))
+        api: CDSE = CDSE((username, password))
         api.set_collection(self.SENTINEL_COLLECTION)
         api.set_processing_level(self.SENTINEL_PROCESSING_LEVEL)
         return api
@@ -130,40 +114,34 @@ class Downloader:
             or (len(start_time) != 10)
             or (len(end_time) != 10)
         ):
-            self.shared.clear_console()
+            # self.shared.clear_console()
             logger.error("Bad interval. Please re-enter the date:\n")
             start_time = input("Specify a search start date (YYYY-MM-DD): ")
             end_time = input("Specify a search finish date (YYYY-MM-DD): ")
-        self.shared.clear_console()
+        # self.shared.clear_console()
         self.start_date = start_time
         self.end_date = end_time
 
     def _set_max_cloud_cover(self):
         while True:
             try:
-                max_cloud_cover = int(
-                    input("Specify a maximum percentage of cloud cover (0%-100%): ")
-                )
+                max_cloud_cover = int(input("Specify a maximum percentage of cloud cover (0%-100%): "))
                 while not (0 <= max_cloud_cover <= 100):
-                    self.shared.clear_console()
+                    # self.shared.clear_console()
                     logger.error(
                         "The specified maximum cloud percentage is out of range or is smaller than minimum range."
                     )
-                    max_cloud_cover = int(
-                        input("Specify a maximum percentage of cloud cover (0%-100%):")
-                    )
+                    max_cloud_cover = int(input("Specify a maximum percentage of cloud cover (0%-100%):"))
                 self.max_cloud_cover = max_cloud_cover
             except ValueError:
-                self.shared.clear_console()
+                # self.shared.clear_console()
                 logger.error("Invalid input format.")
                 continue
             else:
                 break
-        self.shared.clear_console()
+        # self.shared.clear_console()
 
-    def _form_feature_data(
-        self, features
-    ) -> Tuple[Dict[str, Any], Union[int, float], int]:
+    def _form_feature_data(self, features) -> Tuple[Dict[str, Any], Union[int, float], int]:
         feature_info: Dict[str, Any] = {}
         general_size: Union[int, float] = 0
         online_num: int = 0
@@ -173,9 +151,7 @@ class Downloader:
                 online_num += 1
 
             title = feature["properties"]["title"]
-            feature_size = round(
-                feature["properties"]["services"]["download"]["size"] / self.B_to_GB, 2
-            )
+            feature_size = round(feature["properties"]["services"]["download"]["size"] / self.B_to_GB, 2)
             general_size += feature_size
             feature_info[title] = {
                 "Title": title,

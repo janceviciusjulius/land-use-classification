@@ -19,13 +19,9 @@ my_env = os.environ.copy()
 otb_install_path = r"D:\Program Files\OTB-8.0.1-Win64"
 # my_env["OTB_LOGGER_LEVEL"] = "CRITICAL"
 my_env["CURRENT_SCRIPT_DIR"] = r"D:\Program Files\OTB-8.0.1-Win64"
-my_env["PYTHONPATH"] = (
-    otb_install_path + r"\lib\python;" + (my_env.get("PYTHONPATH") or "")
-)
+my_env["PYTHONPATH"] = otb_install_path + r"\lib\python;" + (my_env.get("PYTHONPATH") or "")
 my_env["OTB_APPLICATION_PATH"] = (
-    otb_install_path
-    + r"\lib\otb\applications;"
-    + (my_env.get("OTB_APPLICATION_PATH") or "")
+    otb_install_path + r"\lib\otb\applications;" + (my_env.get("OTB_APPLICATION_PATH") or "")
 )
 my_env["PATH"] = otb_install_path + r"\bin;" + my_env["PATH"]
 my_env["GDAL_DATA"] = otb_install_path + "\share\data"
@@ -35,9 +31,7 @@ my_env["LC_NUMERIC"] = "C"
 
 
 def get_info_of_existing_data():
-    print(
-        "Data merge script for merging bands of downloaded satellite data into a single file.\n"
-    )
+    print("Data merge script for merging bands of downloaded satellite data into a single file.\n")
     print("Make sure that pictures are not opened with GDAL or any other program.")
     root = Tk()
     root.title("File Open Dialog")
@@ -66,11 +60,7 @@ def check_if_selected_correctly(folder_name):
 
 def choose_ID_file_(main_dir_adr):
     main_folder_name = os.path.basename(main_dir_adr)
-    ID_file_match = [
-        file
-        for file in os.listdir(options.path_to_ID_data_files)
-        if file.startswith(main_folder_name)
-    ]
+    ID_file_match = [file for file in os.listdir(options.path_to_ID_data_files) if file.startswith(main_folder_name)]
     ID_file = os.path.join(options.path_to_ID_data_files, ID_file_match[0])
     return ID_file
 
@@ -81,9 +71,7 @@ def choose_ID_file():
     root.title("File Open Dialog")
     root.resizable(False, False)
     root.geometry("300x150")
-    ID_file = filedialog.askopenfilename(
-        initialdir=options.return_path(), filetypes=[("Text files", ".txt")]
-    )
+    ID_file = filedialog.askopenfilename(initialdir=options.return_path(), filetypes=[("Text files", ".txt")])
     root.destroy()
     return ID_file
 
@@ -98,18 +86,12 @@ def create_od_for_ID(ID_file):
 
 
 def delete_all_xml(dir_name):
-    delete_xml = [
-        band
-        for band in os.listdir(dir_name)
-        if band.endswith("xml") and not band.startswith("MTD")
-    ]
+    delete_xml = [band for band in os.listdir(dir_name) if band.endswith("xml") and not band.startswith("MTD")]
     for xml in delete_xml:
         os.remove(os.path.join(dir_name, xml))
 
 
-def separate_bands_merging_for_one_package(
-    working_dir_addr, merged_directory, ID_file, cloud_folder
-):
+def separate_bands_merging_for_one_package(working_dir_addr, merged_directory, ID_file, cloud_folder):
     # Finding and saving band paths. Merging them into one picture. Separating "Cloud" file too.
     global cloud_percentage
     files = os.listdir(working_dir_addr)
@@ -132,16 +114,7 @@ def separate_bands_merging_for_one_package(
                 os.getcwd(),
                 options.saving_folder_name,
                 merged_directory,
-                (
-                    str(i)
-                    + ". "
-                    + date
-                    + " "
-                    + str(files[i - 1]).split("_")[5]
-                    + " "
-                    + str(cloud_percentage)
-                    + "%.tiff"
-                ),
+                (str(i) + ". " + date + " " + str(files[i - 1]).split("_")[5] + " " + str(cloud_percentage) + "%.tiff"),
             )
             output_cloud_name = os.path.join(
                 os.getcwd(),
@@ -258,11 +231,7 @@ def separate_bands_merging_for_one_package(
         if len(find_b12) != 0:
             band_12 = os.path.join(os.getcwd(), temp_working_dir_name, find_b12[0])
 
-        find_SCL = [
-            filename
-            for filename in os.listdir(temp_working_dir_name)
-            if (filename.endswith("SCL_20m.jp2"))
-        ]
+        find_SCL = [filename for filename in os.listdir(temp_working_dir_name) if (filename.endswith("SCL_20m.jp2"))]
         if len(find_SCL) != 0:
             band_SCL = os.path.join(os.getcwd(), temp_working_dir_name, find_SCL[0])
 
@@ -312,12 +281,8 @@ def separate_bands_merging_for_one_package(
         ]
         processed_bands = []
         for band in band_list:
-            new_band_name = "Processed " + os.path.basename(band).replace(
-                ".jp2", ".tiff"
-            )
-            output_file = os.path.join(
-                os.getcwd(), temp_working_dir_name, new_band_name
-            )
+            new_band_name = "Processed " + os.path.basename(band).replace(".jp2", ".tiff")
+            output_file = os.path.join(os.getcwd(), temp_working_dir_name, new_band_name)
             if band in [band_4, band_3, band_2, band_8]:
                 initiate_command = [
                     "otbcli_BandMath",
@@ -467,11 +432,7 @@ def cleaning_data_background(merged_dir_address, cleaned_foldr):
 def get_date_from_filename(dir_address):
     # Date separator from filename
     number_of_files = len(os.listdir(dir_address))
-    files = [
-        file
-        for file in os.listdir(dir_address)
-        if not file.endswith(".xml") and not file.startswith("Processed")
-    ]
+    files = [file for file in os.listdir(dir_address) if not file.endswith(".xml") and not file.startswith("Processed")]
     if number_of_files > 0:
         date = (files[0])[7:15]
     else:
@@ -698,9 +659,7 @@ def cloud_interpolation(merged_dir, apply_cloud_interpolation):
             "T35UMB",
             "T35UMA",
         ]
-        rasters_path = [
-            os.path.join(merged_dir, raster) for raster in os.listdir(merged_dir)
-        ]
+        rasters_path = [os.path.join(merged_dir, raster) for raster in os.listdir(merged_dir)]
         for tile in tiles:
             chosen_rasters = []
             for raster_path in rasters_path:
@@ -709,12 +668,8 @@ def cloud_interpolation(merged_dir, apply_cloud_interpolation):
             if len(chosen_rasters) == 0:
                 print(f"No more rasters found for tile {tile}")
                 continue
-            chosen_rasters.sort(
-                key=lambda x: float(x.split(sep=" ")[-1].replace("%.tiff", ""))
-            )
-            chosen_rasters_basenames = [
-                os.path.basename(chosen_raster) for chosen_raster in chosen_rasters
-            ]
+            chosen_rasters.sort(key=lambda x: float(x.split(sep=" ")[-1].replace("%.tiff", "")))
+            chosen_rasters_basenames = [os.path.basename(chosen_raster) for chosen_raster in chosen_rasters]
             if len(chosen_rasters) > 1:
                 for index, chosen_raster in enumerate(chosen_rasters[1:]):
                     best_raster = gdal.Open(chosen_rasters[0], 1)
@@ -723,9 +678,7 @@ def cloud_interpolation(merged_dir, apply_cloud_interpolation):
                     if mask.all():
                         break
                     interpolation_raster = gdal.Open(chosen_raster, 1)
-                    interpolation_raster_array = (
-                        interpolation_raster.ReadAsArray().astype("int16")
-                    )
+                    interpolation_raster_array = interpolation_raster.ReadAsArray().astype("int16")
 
                     best_raster_array[mask] = interpolation_raster_array[mask]
                     best_raster.WriteArray(best_raster_array)
@@ -734,30 +687,18 @@ def cloud_interpolation(merged_dir, apply_cloud_interpolation):
                     interpolation_raster, interpolation_raster_array = None, None
 
                 tile = chosen_rasters_basenames[0].split(" ")[2]
-                date_ = (
-                    os.path.basename(
-                        os.path.dirname(os.path.abspath(chosen_rasters[0]))
-                    )
-                ).split(" ")[2]
+                date_ = (os.path.basename(os.path.dirname(os.path.abspath(chosen_rasters[0])))).split(" ")[2]
                 os.rename(
                     chosen_rasters[0],
-                    os.path.join(
-                        os.path.dirname(chosen_rasters[0]), f"{date_} {tile}.tiff"
-                    ),
+                    os.path.join(os.path.dirname(chosen_rasters[0]), f"{date_} {tile}.tiff"),
                 )
                 print(f"Successfully extracted {tile} tile file.")
             else:
                 tile = chosen_rasters_basenames[0].split(" ")[2]
-                date_ = (
-                    os.path.basename(
-                        os.path.dirname(os.path.abspath(chosen_rasters[0]))
-                    )
-                ).split(" ")[2]
+                date_ = (os.path.basename(os.path.dirname(os.path.abspath(chosen_rasters[0])))).split(" ")[2]
                 os.rename(
                     chosen_rasters[0],
-                    os.path.join(
-                        os.path.dirname(chosen_rasters[0]), f"{date_} {tile}.tiff"
-                    ),
+                    os.path.join(os.path.dirname(chosen_rasters[0]), f"{date_} {tile}.tiff"),
                 )
         print("Cloud interpolation process completed successfully.", end="\n\n")
     else:
@@ -767,11 +708,7 @@ def cloud_interpolation(merged_dir, apply_cloud_interpolation):
 def delete_files_after_cloud_interpolation(folder, apply_cloud_interpolation):
     if apply_cloud_interpolation:
         all_files = os.listdir(folder)
-        files_to_delete = [
-            os.path.join(folder, file)
-            for file in all_files
-            if len(file.split(" ")) == 4
-        ]
+        files_to_delete = [os.path.join(folder, file) for file in all_files if len(file.split(" ")) == 4]
         print("Deleting files after cloud interpolation", end="\n")
         for file in files_to_delete:
             os.remove(file)
