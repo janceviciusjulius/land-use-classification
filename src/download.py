@@ -153,7 +153,6 @@ class Downloader:
         filename: str = start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud) + "%.txt"
         path = os.path.join(self.shared.root_folders[RootFolders.ID], filename)
         for feature in features:
-            print(feature)
             title: str = features[feature]["Title"]
             cloud: Union[str, int] = features[feature]["CloudCover"]
             with open(path, "a") as f:
