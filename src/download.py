@@ -1,13 +1,18 @@
 import os
 from datetime import datetime
+from io import BytesIO
 from os.path import isdir
-from time import perf_counter
+from shutil import copyfile, rmtree
+from sys import exit
+from time import sleep
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dotenv import load_dotenv
+from folium import GeoJson, Map
+from geopandas import GeoDataFrame, GeoSeries
 from loguru import logger
-from io import BytesIO
-
+from pandas import DataFrame
+from PIL import Image
 from shapely import wkt
 
 from cdse import CDSE
@@ -15,11 +20,7 @@ from schema.downloader_info import DownloadInfo
 from schema.folder_types import FolderPrefix, FolderType
 from schema.root_folders import RootFolders
 from shared import Shared
-from pandas import DataFrame
-from geopandas import GeoDataFrame, GeoSeries
-from folium import GeoJson, Map
-from PIL import Image
-
+from schema.yes_no import YesNo
 
 load_dotenv()
 
@@ -27,7 +28,7 @@ load_dotenv()
 class Downloader:
     SENTINEL_COLLECTION: str = "Sentinel2"
     SENTINEL_PROCESSING_LEVEL: str = "S2MSI2A"
-    B_to_GB = 1024 * 1024 * 1024
+    B_to_GB: int = 1024 * 1024 * 1024
 
     ZEMAITIJA: List[str] = ["34UDG", "34VDH", "34UEG", "34VEH"]
     AUKSTAITIJA: List[str] = ["34VFH", "34UFG", "35VLC", "35ULB", "35UMB", "35VMC"]
@@ -58,21 +59,113 @@ class Downloader:
         self._create_image_for_area_covered(
             search_result=info[DownloadInfo.FEATURES_INFO], dir_path=self.folders[FolderType.PARENT]
         )
+        return self._download_all(api=api, info=info)
 
-        # if download_folder_exists:
-        #     self.shared.ask_deletion(folder_path=download_folder_path)
-        # self._request_analysis(
-        #         files=info[DownloadInfo.FEATURES_INFO],
-        #         size=info[DownloadInfo.GENERAL_SIZE],
-        #         available_count=info[DownloadInfo.ONLINE_COUNT],
-        #     )
+    def _download_all(self, api: CDSE, info: Dict[DownloadInfo, Any]):
+        while True:
+            boolean = input("Do you want to download the data (Y/N)? ")
+            if boolean.lower() == YesNo.YES:
+                self.interpolation = self._ask_for_interpolation()
+                logger.info("Starting downloading...")
+                downloaded_list = api.download_features(
+                    feature_list=info[DownloadInfo.FEATURES], dir=self.folders[FolderType.DOWNLOAD]
+                )
+                sleep(1)
+                self.save_downloaded_files_id(
+                    features=info[DownloadInfo.FEATURES_INFO],
+                    start_time=self.start_date,
+                    end_time=self.end_date,
+                    max_cloud=self.max_cloud_cover,
+                )
+                self.log_downloaded_files(info=info, downloaded_list=downloaded_list)
+                self.shared.unzipping_data(
+                    source=self.folders[FolderType.DOWNLOAD], destination=self.folders[FolderType.ZIP]
+                )
+                self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
+                sleep(1)
+                self.shared.create_folder(path=self.folders[FolderType.DOWNLOAD])
+                self._unpack_s2_bands(
+                    source=self.folders[FolderType.ZIP], destination=self.folders[FolderType.DOWNLOAD]
+                )
+                self.shared.delete_folder(path=self.folders[FolderType.ZIP])
+            elif boolean.lower() == YesNo.NO:
+                logger.info("The data download phase is skipped.")
+                if len(os.listdir(self.folders[FolderType.PARENT])) == 2:
+                    rmtree(self.folders[FolderType.PARENT])
+                else:
+                    rmtree(self.folders[FolderType.DOWNLOAD])
+                exit(1)
+            else:
+                logger.error("Error. Please specify an answer.")
+
+    @staticmethod
+    def _unpack_s2_bands(source, destination):
+        # Taking only the necessary data (D03)
+        files = os.listdir(source)
+        number_of_files = len(files)
+        for i in range(number_of_files):
+            temp_band_folder = os.path.join(destination, files[i])
+            os.mkdir(temp_band_folder)
+            # XML part
+            dir_path = os.path.join(source, files[i])
+            dir_files = os.listdir(dir_path)
+            for dir_file in dir_files:
+                if dir_file.startswith("MTD") and dir_file.endswith(".xml"):
+                    copyfile(
+                        os.path.join(dir_path, dir_file),
+                        os.path.join(temp_band_folder, dir_file),
+                    )
+            # End of XML part
+            folder = os.path.join(source, files[i], "GRANULE")
+            data_name = os.listdir(folder)
+            folder = os.path.join(folder, data_name[0], "IMG_DATA")
+            img_data = os.listdir(folder)
+            if len(img_data) != 3:
+                for j in range(len(img_data)):
+                    band = os.path.join(folder, img_data[j])
+                    temp_band_folder = os.path.join(destination, files[i], img_data[j])
+                    copyfile(band, temp_band_folder)
+            elif len(img_data) == 3:
+                folders = os.listdir(folder)
+                for j in range(len(folders)):
+                    path_to_folders = os.path.join(folder, folders[j])
+                    img_data = os.listdir(path_to_folders)
+                    for z in range(len(img_data)):
+                        band = os.path.join(path_to_folders, img_data[z])
+                        temp_band_folder = os.path.join(destination, files[i], img_data[z])
+                        copyfile(band, temp_band_folder)
+            logger.info("Moved", i + 1, "file.")
+        logger.info("Band exclusion complete.")
+
+    @staticmethod
+    def log_downloaded_files(info: Dict[DownloadInfo, Any], downloaded_list: List[Any]):
+        logger.info(
+            f"Data download complete. Of the {len(info[DownloadInfo.FEATURES])} files, {len(downloaded_list)}"
+            f" were downloaded."
+        )
+        logger.info(
+            f"Due to the server errors {len(info[DownloadInfo.FEATURES]) - len(downloaded_list)}"
+            f" files could not be downloaded."
+        )
+
+    def save_downloaded_files_id(self, features: Dict[str, Any], start_time: str, end_time: str, max_cloud: int):
+        filename: str = start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud) + "%.txt"
+        path = os.path.join(self.shared.root_folders[RootFolders.ID], filename)
+        for feature in features:
+            print(feature)
+            title: str = features[feature]["Title"]
+            cloud: Union[str, int] = features[feature]["CloudCover"]
+            with open(path, "a") as f:
+                f.write(title + "\n")
+                f.write(str(cloud) + "\n")
+                f.close()
+        logger.info("Downloaded data ID saved.")
 
     @staticmethod
     def _create_image_for_area_covered(search_result: Dict[str, Any], dir_path: str) -> None:
         data: List[str] = []
         for index, (key, value) in enumerate(search_result.items()):
-            coordinate = value.get("Coordinates")[0]
-            type(coordinate)
+            coordinate: Any = value.get("Coordinates")[0]
             polygon_wkt: str = f"POLYGON (({' ,'.join(f'{x} {y}' for x, y in coordinate)}))"
             data.append(polygon_wkt)
 
@@ -98,8 +191,7 @@ class Downloader:
         except Exception:
             logger.error(
                 "Cannot create coverage photo due to server error. If coverage photo is necessary rerunning script should"
-                "solve the problem",
-                end="\n",
+                "solve the problem"
             )
 
     @staticmethod
@@ -136,6 +228,7 @@ class Downloader:
             else:
                 download_process = True
         return {
+            DownloadInfo.FEATURES: features,
             DownloadInfo.FEATURES_INFO: features_info,
             DownloadInfo.GENERAL_SIZE: general_size,
             DownloadInfo.ONLINE_COUNT: online_count,
@@ -144,8 +237,10 @@ class Downloader:
     def _login(self) -> CDSE:
         logger.info("Sentinel-2 satellite data download algorithm.")
         logger.info("Loading user from .env")
-        username: str = os.environ.get("USERNAME")
-        password: str = os.environ.get("PASSWORD")
+        # username: str = os.environ.get("USERNAME")
+        # password: str = os.environ.get("PASSWORD")
+        username = "janceviciusjulius@gmail.com"
+        password ="Rankakoja123!"
 
         api: CDSE = CDSE((username, password))
         api.set_collection(self.SENTINEL_COLLECTION)
@@ -212,10 +307,21 @@ class Downloader:
 
         return feature_info, round(general_size, 2), online_num
 
+    @staticmethod
+    def _ask_for_interpolation() -> bool:
+        while True:
+            boolean = str(input("Do you want to apply image interpolation (Y/N)? "))
+            if boolean.lower() == YesNo.YES:
+                return True
+            elif boolean.lower() == YesNo.NO:
+                logger.info("Cloud interpolation algorithm is skipped.")
+                return False
+            else:
+                logger.info("Error. Please specify an answer.")
+
 
 def main() -> None:
     shared: Shared = Shared()
-
     downloader: Downloader = Downloader(shared=shared)
     downloader.download_data()
 

@@ -1,5 +1,6 @@
 import os
 import shutil
+import zipfile
 from os.path import isdir
 from typing import Dict, List, Optional, Tuple
 
@@ -14,6 +15,24 @@ class Shared:
 
     def __init__(self):
         self.root_folders = self.create_root_folders()
+
+    @staticmethod
+    def unzipping_data(source: str, destination: str):
+        files: List[str] = os.listdir(source)
+        if len(files) == 0:
+            raise ValueError("No files to unzip.")
+
+        logger.info(f"Data unzipping begins. Number of files: {len(files)}")
+        for index, file in enumerate(files):
+            try:
+                temp_file_path = os.path.join(source, file)
+                with zipfile.ZipFile(temp_file_path, "r") as zip_ref:
+                    zip_ref.extractall(destination)
+                logger.info(f"Successfully unzipped {index + 1} file")
+            except zipfile.BadZipfile:
+                logger.error(f"Due to downloaded file problem {index + 1} file is skipped.")
+                continue
+        logger.info("Unzipping complete.")
 
     @staticmethod
     def create_folder(path: str) -> str:
@@ -74,6 +93,8 @@ class Shared:
             for folder_to_delete in folders_to_delete:
                 print(folders[folder_to_delete])
                 self.delete_folder(folders[folder_to_delete])
+        else:
+            logger.info("Data left on the disk.")
 
     @staticmethod
     def delete_folder(path: str):
@@ -86,9 +107,7 @@ class Shared:
 
     def check_if_data_folder_exists(self, folders: Dict[FolderType, str], scenario: FolderType) -> str:
         if isdir(folders[scenario]):
-            print("EINU I DELETE")
             return self.ask_deletion(folders=folders, scenario=scenario)
-
         path = self.create_folder(path=folders[scenario])
         return path
 

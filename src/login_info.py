@@ -7,12 +7,3 @@ user_list = {
     "Julius JanceviciusNew": ["janceviciusjulius@gmail.com", "Rankakoja123!"],
 }
 
-user_name_list = [
-    "Mindaugas",
-    "Ieva",
-    "Gediminas",
-    "Martynas",
-    "Nijole",
-    "Zydrune",
-    "Ema",
-]

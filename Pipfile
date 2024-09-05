@@ -17,6 +17,7 @@ loguru = "*"
 python-dotenv = "*"
 folium = "*"
 selenium = "*"
+bs4 = "*"
 
 [dev-packages]
 black = "*"

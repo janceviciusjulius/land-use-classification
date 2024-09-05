@@ -257,7 +257,6 @@ def path_to_bands_sentinel2(zipped_dir_name, band_folder):
 
 
 def save_downloaded_files_id(features, start_time, end_time, max_cloud):
-    # Saving images cloud cover information into text file
     filename = start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud) + "%.txt"
     path = os.path.join(os.getcwd(), options.ID_folder_name, filename)
     for feature in features:
@@ -452,16 +451,16 @@ if __name__ == "__main__":
     api_obj = login()
     dir_path, interpolation_bool = data_from_sentinel(api=api_obj)
     # Merge part
-    working_dir_address, chosen_dir, main_dir = merge.prepare_path(dir_path)
-    ID_file_path = merge.choose_ID_file_(main_dir_adr=main_dir)
-    merged_dir = merge.create_folder_for_merged_data(chosen_dir, main_dir)
-    cloud_directory = merge.create_folder_for_cloud_masks(chosen_dir, main_dir)
-    merge.separate_bands_merging_for_one_package(working_dir_address, merged_dir, ID_file_path, cloud_directory)
-    cleaned_folder = merge.create_folder_for_cleaned_data(chosen_dir, main_dir)
-    merge.cleaning_data_background(merged_dir, cleaned_folder)
-    merge.cloud_interpolation(cleaned_folder, interpolation_bool)
-    merge.delete_files_after_cloud_interpolation(cleaned_folder, interpolation_bool)
-    merge.count_indexes(cleanedFolder=cleaned_folder)
-    merge.delete_folder(merged_dir)
-    merge.ask_for_deleting(working_dir_address, ID_file_path)
-    conversion = dt.timedelta(seconds=round(time.time() - program_start_time))
+    # working_dir_address, chosen_dir, main_dir = merge.prepare_path(dir_path)
+    # ID_file_path = merge.choose_ID_file_(main_dir_adr=main_dir)
+    # merged_dir = merge.create_folder_for_merged_data(chosen_dir, main_dir)
+    # cloud_directory = merge.create_folder_for_cloud_masks(chosen_dir, main_dir)
+    # merge.separate_bands_merging_for_one_package(working_dir_address, merged_dir, ID_file_path, cloud_directory)
+    # cleaned_folder = merge.create_folder_for_cleaned_data(chosen_dir, main_dir)
+    # merge.cleaning_data_background(merged_dir, cleaned_folder)
+    # merge.cloud_interpolation(cleaned_folder, interpolation_bool)
+    # merge.delete_files_after_cloud_interpolation(cleaned_folder, interpolation_bool)
+    # merge.count_indexes(cleanedFolder=cleaned_folder)
+    # merge.delete_folder(merged_dir)
+    # merge.ask_for_deleting(working_dir_address, ID_file_path)
+    # conversion = dt.timedelta(seconds=round(time.time() - program_start_time))
