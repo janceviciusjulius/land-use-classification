@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from os.path import isdir
 from time import perf_counter
 from typing import Any, Dict, List, Tuple, Union, Optional
 
@@ -9,6 +10,7 @@ from loguru import logger
 from cdse import CDSE
 from schema.root_folders import RootFolders
 from schema.folder_types import FolderType, FolderTypePrefix
+from schema.downloader_info import DownloadInfo
 from shared import Shared
 
 load_dotenv()
@@ -26,42 +28,57 @@ class Downloader:
     FOOTPRINT: List[str] = ZEMAITIJA + AUKSTAITIJA + SUVALKAI + DZUKAI
 
     def __init__(self, shared: Shared):
-        self.shared = shared
-        self.root_folders = self.shared.create_root_folders()
-        self.interpolation = None
-        self.start_date = None
-        self.end_date = None
-        self.max_cloud_cover = None
-        self.folders = {}
+        self.shared: Shared = shared
+        self.interpolation: Optional[bool] = None
+        self.start_date: Optional[str] = None
+        self.end_date: Optional[str] = None
+        self.max_cloud_cover: Optional[int] = None
+        self.folders: Dict[FolderType, str] = {}
 
     def download_data(self):
         api = self._login()
-        api.set_collection(self.SENTINEL_COLLECTION)
-        api.set_processing_level(self.SENTINEL_PROCESSING_LEVEL)
+        info: Dict[str, Any] = self._generate_parameters(api=api)
 
-        self._generate_parameters(api=api)
         main_folder_path = os.path.join(
-            self.root_folders[RootFolders.DATA_FOLDER], self._generate_folder_name()
-        )
-        self.folders[FolderType.PARENT] = self.shared.create_folder(
-            path=main_folder_path
-        )
-        self.check_if_data_folder_exists(folder_type_prefix=FolderTypePrefix.DOWNLOAD)
-
-
-    def check_if_data_folder_exists(self, folder_type_prefix: FolderTypePrefix):
-        folder_path: str = os.path.join(
-            self.folders[FolderType.PARENT],
+            self.shared.root_folders[RootFolders.DATA_FOLDER],
             self.shared.generate_folder_name(
                 start_date=self.start_date,
                 end_date=self.end_date,
                 max_cloud_cover=self.max_cloud_cover,
-                folder_type=folder_type_prefix,
             ),
         )
+        self.folders[FolderType.PARENT] = self.shared.create_folder(
+            path=main_folder_path
+        )
+        download_folder_exists, download_folder_path = (
+            self.shared.check_if_data_folder_exists(
+                folder=self.folders[FolderType.PARENT],
+                start_date=self.start_date,
+                end_date=self.end_date,
+                max_cloud_cover=self.max_cloud_cover,
+                folder_type_prefix=FolderTypePrefix.DOWNLOAD,
+            )
+        )
+        if download_folder_exists:
+            self.shared.ask_deletion(folder_path=download_folder_path)
+        self._request_analysis(
+                files=info[DownloadInfo.FEATURES_INFO],
+                size=info[DownloadInfo.GENERAL_SIZE],
+                available_count=info[DownloadInfo.ONLINE_COUNT],
+            )
 
-
-        print(folder_path)
+    @staticmethod
+    def _request_analysis(files, size, available_count):
+        logger.info(f"Data files found: {len(files)}")
+        logger.info(f"Size of the files: {size} GB")
+        logger.info(
+            f"Of the {len(files)} files, {available_count} are active and available,"
+            f" {len(files) - available_count} are currently unavailable."
+        )
+        logger.info(
+            "NOTE: Unavailable data may become available during data download. If this happens, the data will be "
+            "downloaded."
+        )
 
     def _generate_parameters(self, api):
         download_process: bool = False
@@ -87,14 +104,22 @@ class Downloader:
                 )
             else:
                 download_process = True
+        return {
+            "features_info": features_info,
+            "general_size": general_size,
+            "online_count": online_count,
+        }
 
-    @staticmethod
-    def _login() -> CDSE:
+    def _login(self) -> CDSE:
         logger.info("Sentinel-2 satellite data download algorithm.")
         logger.info("Loading user from .env")
-        username = os.environ.get("USERNAME")
-        password = os.environ.get("PASSWORD")
-        return CDSE((username, password))
+        username: str = os.environ.get("USERNAME")
+        password: str = os.environ.get("PASSWORD")
+
+        api: CDSE =  CDSE((username, password))
+        api.set_collection(self.SENTINEL_COLLECTION)
+        api.set_processing_level(self.SENTINEL_PROCESSING_LEVEL)
+        return api
 
     def _set_time_interval(self):
         start_time = input("Specify a search start date (YYYY-MM-DD): ")
