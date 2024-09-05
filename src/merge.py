@@ -1,20 +1,19 @@
+import datetime as dt
 import os
 import shutil
 import subprocess
 import sys
 import time
-import datetime as dt
 from collections import OrderedDict
 from os.path import isdir
-from tkinter import filedialog
 from tkinter import *
-from tkinter import Tk
+from tkinter import Tk, filedialog
 
 import numpy as np
 from bs4 import BeautifulSoup
+from osgeo import gdal
 
 import options
-from osgeo import gdal
 
 my_env = os.environ.copy()
 otb_install_path = r"D:\Program Files\OTB-8.0.1-Win64"

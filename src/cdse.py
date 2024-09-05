@@ -1,12 +1,13 @@
-import requests
 import netrc
-from datetime import datetime, timedelta
-import sys
 import os
-from concurrent.futures import ThreadPoolExecutor
-from email.message import Message
+import sys
 import threading
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from email.message import Message
+
 import geopandas as gpd
+import requests
 
 
 class CDSE:

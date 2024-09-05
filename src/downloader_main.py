@@ -1,29 +1,26 @@
-import os
-import time
-from os.path import isdir
-
-from cdse import CDSE
-import options
-from datetime import datetime
-import login_info
-import pandas as pd
 import csv
 import datetime as dt
 import io
 import logging
 import os
 import re
-from shapely import wkt
-from PIL import Image
-import folium
 import shutil
 import sys
-import geopandas as gpd
 import time
 import zipfile
 from datetime import datetime
 from os.path import isdir
+
+import folium
+import geopandas as gpd
+import pandas as pd
+from PIL import Image
+from shapely import wkt
+
+import login_info
 import merge
+import options
+from cdse import CDSE
 
 
 def unzipping_data(dir_name, zipped_dir_name):
@@ -65,7 +62,6 @@ def create_folder_for_download_sentinel2(
     dir_name = (
         "Sentinel2 "
         + start_time
-        + ".."
         + end_time
         + " "
         + "0"
@@ -407,6 +403,9 @@ def data_from_sentinel(api):
         main_folder_path = os.path.join(data_folder, CURRENT_USER, main_folder_name)
         if not isdir(main_folder_path):
             os.mkdir(main_folder_path)
+            """
+            
+            """
         if not isdir(
             os.path.join(
                 main_folder_path,
