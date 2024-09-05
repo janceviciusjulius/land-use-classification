@@ -86,12 +86,11 @@ class Shared:
         }
 
         logger.info("NOTE: All downloaded and pre-processed data will be deleted.")
-        boolean: str = str(input("Do you want to delete the data (Y/N)? "))
+        boolean: str = str(input("Some data already exists. Do you want to delete the data (Y/N)? "))
 
         if boolean.lower() == YesNo.YES:
             folders_to_delete: List[FolderType] = deletion_scenarios[scenario]
             for folder_to_delete in folders_to_delete:
-                print(folders[folder_to_delete])
                 self.delete_folder(folders[folder_to_delete])
         else:
             logger.info("Data left on the disk.")

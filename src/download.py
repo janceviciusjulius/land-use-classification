@@ -59,7 +59,7 @@ class Downloader:
         self._create_image_for_area_covered(
             search_result=info[DownloadInfo.FEATURES_INFO], dir_path=self.folders[FolderType.PARENT]
         )
-        return self._download_all(api=api, info=info)
+        self._download_all(api=api, info=info)
 
     def _download_all(self, api: CDSE, info: Dict[DownloadInfo, Any]):
         while True:
@@ -88,6 +88,7 @@ class Downloader:
                     source=self.folders[FolderType.ZIP], destination=self.folders[FolderType.DOWNLOAD]
                 )
                 self.shared.delete_folder(path=self.folders[FolderType.ZIP])
+                break
             elif boolean.lower() == YesNo.NO:
                 logger.info("The data download phase is skipped.")
                 if len(os.listdir(self.folders[FolderType.PARENT])) == 2:
@@ -223,6 +224,7 @@ class Downloader:
             )
 
             features_info, general_size, online_count = self._form_feature_data(features=features)
+            self._request_analysis(files=features, size=general_size, available_count=online_count)
             if len(features_info) == 0:
                 logger.error("No data was found according to the given criteria. Please try again.")
             else:
@@ -237,10 +239,8 @@ class Downloader:
     def _login(self) -> CDSE:
         logger.info("Sentinel-2 satellite data download algorithm.")
         logger.info("Loading user from .env")
-        # username: str = os.environ.get("USERNAME")
-        # password: str = os.environ.get("PASSWORD")
-        username = "janceviciusjulius@gmail.com"
-        password ="Rankakoja123!"
+        username: str = os.environ.get("USERNAME")
+        password: str = os.environ.get("PASSWORD")
 
         api: CDSE = CDSE((username, password))
         api.set_collection(self.SENTINEL_COLLECTION)
