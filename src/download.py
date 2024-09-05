@@ -6,12 +6,20 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dotenv import load_dotenv
 from loguru import logger
+from io import BytesIO
+
+from shapely import wkt
 
 from cdse import CDSE
 from schema.downloader_info import DownloadInfo
 from schema.folder_types import FolderPrefix, FolderType
 from schema.root_folders import RootFolders
 from shared import Shared
+from pandas import DataFrame
+from geopandas import GeoDataFrame, GeoSeries
+from folium import GeoJson, Map
+from PIL import Image
+
 
 load_dotenv()
 
@@ -37,15 +45,19 @@ class Downloader:
 
     def download_data(self):
         api = self._login()
-        info: Dict[str, Any] = self._generate_parameters(api=api)
+        info: Dict[DownloadInfo, Any] = self._generate_parameters(api=api)
 
         self.folders: Dict[FolderType, str] = self.shared.generate_folders(
             start_date=self.start_date,
             end_date=self.end_date,
             cloud_cover=self.max_cloud_cover,
         )
-
+        self.shared.create_parent_folder(folders=self.folders)
         self.shared.check_if_data_folder_exists(folders=self.folders, scenario=FolderType.DOWNLOAD)
+
+        self._create_image_for_area_covered(
+            search_result=info[DownloadInfo.FEATURES_INFO], dir_path=self.folders[FolderType.PARENT]
+        )
 
         # if download_folder_exists:
         #     self.shared.ask_deletion(folder_path=download_folder_path)
@@ -54,6 +66,41 @@ class Downloader:
         #         size=info[DownloadInfo.GENERAL_SIZE],
         #         available_count=info[DownloadInfo.ONLINE_COUNT],
         #     )
+
+    @staticmethod
+    def _create_image_for_area_covered(search_result: Dict[str, Any], dir_path: str) -> None:
+        data: List[str] = []
+        for index, (key, value) in enumerate(search_result.items()):
+            coordinate = value.get("Coordinates")[0]
+            type(coordinate)
+            polygon_wkt: str = f"POLYGON (({' ,'.join(f'{x} {y}' for x, y in coordinate)}))"
+            data.append(polygon_wkt)
+
+        df: DataFrame = DataFrame(data, columns=["geometry"])
+        df["geometry"] = df["geometry"].apply(wkt.loads)
+        gdf: GeoDataFrame = GeoDataFrame(df, crs="epsg:4326")
+        try:
+            m: Map = Map(location=[54.90942, 23.91456], zoom_start=7, tiles="CartoDB positron")
+            for _, r in gdf.iterrows():
+                sim_geo: GeoSeries | str = GeoSeries(r["geometry"]).simplify(tolerance=0.000001)
+                geo_j = sim_geo.to_json()
+                geo_j: GeoJson = GeoJson(data=geo_j, style_function=lambda x: {"fillColor": "orange"})
+                geo_j.add_to(m)
+            img_data = m._to_png(3)
+            img: Image = Image.open(BytesIO(img_data))
+            img.save(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
+            img.show(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
+            if os.path.isfile("geckodriver.log"):
+                try:
+                    os.remove("geckodriver.log")
+                except PermissionError:
+                    pass
+        except Exception:
+            logger.error(
+                "Cannot create coverage photo due to server error. If coverage photo is necessary rerunning script should"
+                "solve the problem",
+                end="\n",
+            )
 
     @staticmethod
     def _request_analysis(files, size, available_count):
@@ -68,7 +115,7 @@ class Downloader:
             "downloaded."
         )
 
-    def _generate_parameters(self, api):
+    def _generate_parameters(self, api) -> Dict[DownloadInfo, Any]:
         download_process: bool = False
         while not download_process:
             self._set_time_interval()
@@ -89,9 +136,9 @@ class Downloader:
             else:
                 download_process = True
         return {
-            "features_info": features_info,
-            "general_size": general_size,
-            "online_count": online_count,
+            DownloadInfo.FEATURES_INFO: features_info,
+            DownloadInfo.GENERAL_SIZE: general_size,
+            DownloadInfo.ONLINE_COUNT: online_count,
         }
 
     def _login(self) -> CDSE:

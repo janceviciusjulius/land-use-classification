@@ -63,13 +63,16 @@ class Shared:
                 FolderType.MERGED,
                 FolderType.CLOUD,
             ],
-            FolderType.PARENT: [FolderType.PARENT]
+            FolderType.PARENT: [FolderType.PARENT],
         }
+
         logger.info("NOTE: All downloaded and pre-processed data will be deleted.")
         boolean: str = str(input("Do you want to delete the data (Y/N)? "))
+
         if boolean.lower() == YesNo.YES:
             folders_to_delete: List[FolderType] = deletion_scenarios[scenario]
             for folder_to_delete in folders_to_delete:
+                print(folders[folder_to_delete])
                 self.delete_folder(folders[folder_to_delete])
 
     @staticmethod
@@ -83,13 +86,15 @@ class Shared:
 
     def check_if_data_folder_exists(self, folders: Dict[FolderType, str], scenario: FolderType) -> str:
         if isdir(folders[scenario]):
+            print("EINU I DELETE")
             return self.ask_deletion(folders=folders, scenario=scenario)
+
         path = self.create_folder(path=folders[scenario])
         return path
 
     def create_parent_folder(self, folders):
         if isdir(folders[FolderType.PARENT]):
-            return self.ask_deletion(folders=folders, scenario=FolderType.PARENT)
+            self.ask_deletion(folders=folders, scenario=FolderType.PARENT)
         return self.create_folder(path=folders[FolderType.PARENT])
 
     def generate_folders(self, start_date, end_date, cloud_cover) -> Dict[FolderType, str]:
