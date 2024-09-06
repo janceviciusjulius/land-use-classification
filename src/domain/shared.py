@@ -7,7 +7,6 @@ from zipfile import BadZipfile, ZipFile
 
 from loguru import logger
 
-from demo import parent_dir
 from schema.folder_types import FolderPrefix, FolderType
 from schema.parameters import Parameters
 from schema.root_folders import RootFolders
@@ -74,7 +73,7 @@ class Shared:
     def _get_project_folder() -> str:
         current_dir: str = os.path.dirname(os.path.abspath(__file__))
         src_root: str = os.path.abspath(os.path.join(current_dir, os.pardir))
-        parent = os.path.dirname(src_root)
+        parent: str = os.path.dirname(src_root)
         return parent
 
     def ask_deletion(self, folders: Dict[FolderType, str], scenario: FolderType) -> None:
