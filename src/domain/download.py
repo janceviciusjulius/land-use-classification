@@ -16,10 +16,10 @@ from PIL import Image
 from shapely import wkt
 
 from cdse import CDSE
+from domain.shared import Shared
 from schema.downloader_info import DownloadInfo
-from schema.folder_types import FolderPrefix, FolderType
+from schema.folder_types import FolderType
 from schema.root_folders import RootFolders
-from shared import Shared
 from schema.yes_no import YesNo
 
 load_dotenv()
@@ -57,9 +57,13 @@ class Downloader:
         self.shared.check_if_data_folder_exists(folders=self.folders, scenario=FolderType.DOWNLOAD)
 
         self._create_image_for_area_covered(
-            search_result=info[DownloadInfo.FEATURES_INFO], dir_path=self.folders[FolderType.PARENT]
+            search_result=info[DownloadInfo.FEATURES_INFO],
+            dir_path=self.folders[FolderType.PARENT],
         )
         self._download_all(api=api, info=info)
+
+    def get_value(self, value: str) -> Any:
+        return getattr(self, value)
 
     def _download_all(self, api: CDSE, info: Dict[DownloadInfo, Any]):
         while True:
@@ -68,7 +72,8 @@ class Downloader:
                 self.interpolation = self._ask_for_interpolation()
                 logger.info("Starting downloading...")
                 downloaded_list = api.download_features(
-                    feature_list=info[DownloadInfo.FEATURES], dir=self.folders[FolderType.DOWNLOAD]
+                    feature_list=info[DownloadInfo.FEATURES],
+                    dir=self.folders[FolderType.DOWNLOAD],
                 )
                 sleep(1)
                 self.save_downloaded_files_id(
@@ -79,13 +84,15 @@ class Downloader:
                 )
                 self.log_downloaded_files(info=info, downloaded_list=downloaded_list)
                 self.shared.unzipping_data(
-                    source=self.folders[FolderType.DOWNLOAD], destination=self.folders[FolderType.ZIP]
+                    source=self.folders[FolderType.DOWNLOAD],
+                    destination=self.folders[FolderType.ZIP],
                 )
                 self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
                 sleep(1)
                 self.shared.create_folder(path=self.folders[FolderType.DOWNLOAD])
                 self._unpack_s2_bands(
-                    source=self.folders[FolderType.ZIP], destination=self.folders[FolderType.DOWNLOAD]
+                    source=self.folders[FolderType.ZIP],
+                    destination=self.folders[FolderType.DOWNLOAD],
                 )
                 self.shared.delete_folder(path=self.folders[FolderType.ZIP])
                 break
@@ -98,6 +105,9 @@ class Downloader:
                 exit(1)
             else:
                 logger.error("Error. Please specify an answer.")
+
+    def get_value(self, value: str):
+        return getattr(self, value)
 
     @staticmethod
     def _unpack_s2_bands(source, destination):
@@ -135,7 +145,7 @@ class Downloader:
                         band = os.path.join(path_to_folders, img_data[z])
                         temp_band_folder = os.path.join(destination, files[i], img_data[z])
                         copyfile(band, temp_band_folder)
-            logger.info("Moved", i + 1, "file.")
+            logger.info(f"Moved {i + 1} file.")
         logger.info("Band exclusion complete.")
 
     @staticmethod
@@ -317,13 +327,3 @@ class Downloader:
                 return False
             else:
                 logger.info("Error. Please specify an answer.")
-
-
-def main() -> None:
-    shared: Shared = Shared()
-    downloader: Downloader = Downloader(shared=shared)
-    downloader.download_data()
-
-
-if __name__ == "__main__":
-    main()

@@ -1,12 +1,15 @@
 import os
-import shutil
-import zipfile
+from json import dumps, load
 from os.path import isdir
-from typing import Dict, List, Optional, Tuple
+from shutil import rmtree
+from typing import Dict, List, Optional
+from zipfile import BadZipfile, ZipFile
 
-from tensorboard.backend.event_processing.data_provider import logger
+from loguru import logger
 
+from demo import parent_dir
 from schema.folder_types import FolderPrefix, FolderType
+from schema.parameters import Parameters
 from schema.root_folders import RootFolders
 from schema.yes_no import YesNo
 
@@ -26,10 +29,10 @@ class Shared:
         for index, file in enumerate(files):
             try:
                 temp_file_path = os.path.join(source, file)
-                with zipfile.ZipFile(temp_file_path, "r") as zip_ref:
+                with ZipFile(temp_file_path, "r") as zip_ref:
                     zip_ref.extractall(destination)
                 logger.info(f"Successfully unzipped {index + 1} file")
-            except zipfile.BadZipfile:
+            except BadZipfile:
                 logger.error(f"Due to downloaded file problem {index + 1} file is skipped.")
                 continue
         logger.info("Unzipping complete.")
@@ -69,11 +72,12 @@ class Shared:
 
     @staticmethod
     def _get_project_folder() -> str:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.abspath(os.path.join(current_dir, os.pardir))
-        return project_root
+        current_dir: str = os.path.dirname(os.path.abspath(__file__))
+        src_root: str = os.path.abspath(os.path.join(current_dir, os.pardir))
+        parent = os.path.dirname(src_root)
+        return parent
 
-    def ask_deletion(self, folders: Dict[FolderType, str], scenario: FolderType) -> str:
+    def ask_deletion(self, folders: Dict[FolderType, str], scenario: FolderType) -> None:
         deletion_scenarios: Dict[FolderType, List[FolderType]] = {
             FolderType.DOWNLOAD: [
                 FolderType.DOWNLOAD,
@@ -99,14 +103,14 @@ class Shared:
     def delete_folder(path: str):
         logger.info("Deletion of unnecessary data begins. ")
         try:
-            shutil.rmtree(path)
+            rmtree(path)
             logger.info("Data deletion successful.")
         except (os.error, OSError, FileNotFoundError, NotADirectoryError):
             logger.error("Folder cannot be found. Skipping")
 
     def check_if_data_folder_exists(self, folders: Dict[FolderType, str], scenario: FolderType) -> str:
         if isdir(folders[scenario]):
-            return self.ask_deletion(folders=folders, scenario=scenario)
+            self.ask_deletion(folders=folders, scenario=scenario)
         path = self.create_folder(path=folders[scenario])
         return path
 
@@ -150,3 +154,11 @@ class Shared:
         folders[FolderType.JOINED] = joined_folder_path
         folders[FolderType.CLASSIFIED] = classified_folder_path
         return folders
+
+    @staticmethod
+    def save_search_parameters(start_date: str, end_date: str, cloud_cover: str):
+        data = {
+            Parameters.START_DATE: start_date,
+            Parameters.END_DATE: end_date,
+            Parameters.CLOUD_COVERAGE: cloud_cover,
+        }

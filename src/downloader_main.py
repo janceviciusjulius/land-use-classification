@@ -18,7 +18,7 @@ from PIL import Image
 from shapely import wkt
 
 import login_info
-import merge
+import merge_old
 import options
 from cdse import CDSE
 

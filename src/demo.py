@@ -1,5 +1,7 @@
-while True:
-    print(1)
-    print(2)
-    break
-    print(3)
+from pathlib import Path
+
+path = Path("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/src")
+
+parent_dir = path.parent
+
+print(parent_dir)

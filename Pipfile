@@ -18,6 +18,7 @@ python-dotenv = "*"
 folium = "*"
 selenium = "*"
 bs4 = "*"
+rasterio = "*"
 
 [dev-packages]
 black = "*"
