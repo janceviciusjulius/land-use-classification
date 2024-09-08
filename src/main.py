@@ -5,7 +5,7 @@ from domain.merge import Merge
 from domain.shared import Shared
 
 
-def download_algorithm(window):
+def download_algorithm():
     shared: Shared = Shared()
     downloader: Downloader = Downloader(shared=shared)
     # merge: Merge = Merge(shared=shared)
@@ -21,9 +21,12 @@ def main_page():
     btn1 = Button(
         window,
         text="Download Sentinel data",
-        command=lambda: download_algorithm(window=window),
+        command=lambda: download_algorithm(),
     )
     btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky="ew")
+
+    close_btn = Button(window, text="Close program", command=window.destroy)
+    close_btn.grid(row=4, columnspan=2, padx=10, pady=10)
 
     window.mainloop()
 

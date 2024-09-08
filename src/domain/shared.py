@@ -1,4 +1,6 @@
 import os
+import sys
+from enum import Enum
 from json import dump, load
 from os.path import isdir
 from shutil import rmtree
@@ -97,6 +99,7 @@ class Shared:
                 self.delete_folder(folders[folder_to_delete])
         else:
             logger.info("Data left on the disk.")
+            sys.exit(1)
 
     @staticmethod
     def delete_folder(path: str):
@@ -125,45 +128,57 @@ class Shared:
     def generate_folders(self, start_date, end_date, cloud_cover) -> Dict[FolderType, str]:
         folders: Dict[FolderType, str] = {}
 
-        main_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover)
-        download_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.DOWNLOAD)
-        zip_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.ZIP)
-        moved_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.MOVED)
-        merged_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.MERGED)
-        cleaned_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.CLEANED)
-        cloud_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.CLOUD)
-        joined_folder_name: str = self.generate_folder_name(start_date, end_date, cloud_cover, FolderPrefix.JOINED)
-        classified_folder_name: str = self.generate_folder_name(
-            start_date, end_date, cloud_cover, FolderPrefix.CLASSIFIED
-        )
+        folder_mapping: Dict[FolderType, Optional[FolderPrefix]] = {
+            FolderType.PARENT: None,
+            FolderType.DOWNLOAD: FolderPrefix.DOWNLOAD,
+            FolderType.ZIP: FolderPrefix.ZIP,
+            FolderType.MOVED: FolderPrefix.MOVED,
+            FolderType.MERGED: FolderPrefix.MERGED,
+            FolderType.CLEANED: FolderPrefix.CLEANED,
+            FolderType.CLOUD: FolderPrefix.CLOUD,
+            FolderType.JOINED: FolderPrefix.JOINED,
+            FolderType.CLASSIFIED: FolderPrefix.CLASSIFIED,
+        }
 
-        main_folder_path: str = os.path.join(self.root_folders[RootFolders.DATA_FOLDER], main_folder_name)
-        download_folder_path: str = os.path.join(main_folder_path, download_folder_name)
-        zip_folder_path: str = os.path.join(main_folder_path, zip_folder_name)
-        moved_folder_path: str = os.path.join(main_folder_path, moved_folder_name)
-        merged_folder_path: str = os.path.join(main_folder_path, merged_folder_name)
-        cleaned_folder_path: str = os.path.join(main_folder_path, cleaned_folder_name)
-        cloud_folder_name: str = os.path.join(main_folder_path, cloud_folder_name)
-        joined_folder_path: str = os.path.join(main_folder_path, joined_folder_name)
-        classified_folder_path: str = os.path.join(main_folder_path, classified_folder_name)
-
+        main_folder_name = self.generate_folder_name(start_date, end_date, cloud_cover)
+        main_folder_path = os.path.join(self.root_folders[RootFolders.DATA_FOLDER], main_folder_name)
         folders[FolderType.PARENT] = main_folder_path
-        folders[FolderType.DOWNLOAD] = download_folder_path
-        folders[FolderType.ZIP] = zip_folder_path
-        folders[FolderType.MOVED] = moved_folder_path
-        folders[FolderType.MERGED] = merged_folder_path
-        folders[FolderType.CLEANED] = cleaned_folder_path
-        folders[FolderType.CLOUD] = cloud_folder_name
-        folders[FolderType.JOINED] = joined_folder_path
-        folders[FolderType.CLASSIFIED] = classified_folder_path
+
+        for folder_type, prefix in folder_mapping.items():
+            if folder_type != FolderType.PARENT:
+                folder_name = self.generate_folder_name(start_date, end_date, cloud_cover, prefix)
+                folder_path = os.path.join(main_folder_path, folder_name)
+                folders[folder_type] = folder_path
         return folders
 
-    @staticmethod
-    def save_search_parameters(start_date: str, end_date: str, cloud_cover: int):
-        data = {
-            Parameters.START_DATE: start_date,
-            Parameters.END_DATE: end_date,
-            Parameters.CLOUD_COVERAGE: cloud_cover,
-        }
-        with open("data.json", "w") as f:
-            dump(data, f)
+    def _convert_enum_keys(self, dict_: Dict[Any, Any]) -> Dict[Any, Any]:
+        if isinstance(dict_, dict):
+            return {
+                key.name if isinstance(key, Enum) else key: self._convert_enum_keys(value)
+                for key, value in dict_.items()
+            }
+        else:
+            return dict_
+
+    # TODO: ADD READING JSON SUPPORT
+    # @staticmethod
+    # def load_json_with_enum(json_str: str, enum_type: Enum) -> Dict[str, Any]:
+    #     data = loads(json_str)
+    #
+    #     if 'folders' in data:
+    #         data['folders'] = {enum_type[key]: value for key, value in data['folders'].items()}
+    #
+    #     return data
+
+    def to_dict(self, cls_obj: Any) -> Dict[str, Any]:
+        dict_: [Any, Any] = cls_obj.__dict__.copy()
+        dict_.pop('shared', None)
+        return self._convert_enum_keys(dict_)
+
+
+    def save_search_parameters(self, cls_obj: Any):
+        class_variables: Dict[str, Any] = self.to_dict(cls_obj=cls_obj)
+
+        json_file_path = os.path.join(cls_obj.folders[FolderType.PARENT], "data.json")
+        with open(json_file_path, "w") as f:
+            dump(class_variables, f, indent=4)

@@ -41,7 +41,8 @@ class Downloader:
         self.start_date: Optional[str] = None
         self.end_date: Optional[str] = None
         self.max_cloud_cover: Optional[int] = None
-        self.folders: Dict[FolderType, str] = {}
+        self.folders: Optional[Dict[FolderType, str]] = None
+        self.files: Optional[Dict[str, float]] = None
 
     def download_data(self):
         api = self._login()
@@ -60,6 +61,7 @@ class Downloader:
             dir_path=self.folders[FolderType.PARENT],
         )
         self._download_all(api=api, info=info)
+        self.shared.save_search_parameters(cls_obj=self)
 
     def _download_all(self, api: CDSE, info: Dict[DownloadInfo, Any]):
         while True:
@@ -84,7 +86,7 @@ class Downloader:
                     destination=self.folders[FolderType.ZIP],
                 )
                 self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
-                sleep(1)
+                sleep(0.5)
                 self.shared.create_folder(path=self.folders[FolderType.DOWNLOAD])
                 self._unpack_s2_bands(
                     source=self.folders[FolderType.ZIP],
@@ -101,9 +103,6 @@ class Downloader:
                 exit(1)
             else:
                 logger.error("Error. Please specify an answer.")
-
-    def get_value(self, value: str):
-        return getattr(self, value)
 
     @staticmethod
     def _unpack_s2_bands(source, destination):
@@ -155,6 +154,7 @@ class Downloader:
             f" files could not be downloaded."
         )
 
+    # TODO: CHANGE TO JSON and save in parent as cloud_info.json
     def save_downloaded_files_id(self, features: Dict[str, Any], start_time: str, end_time: str, max_cloud: int):
         filename: str = start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud) + "%.txt"
         path = os.path.join(self.shared.root_folders[RootFolders.ID], filename)
@@ -165,10 +165,11 @@ class Downloader:
                 f.write(title + "\n")
                 f.write(str(cloud) + "\n")
                 f.close()
-        logger.info("Downloaded data ID saved.")
+        logger.info("Downloaded data cloud information successfully saved.")
 
     @staticmethod
     def _create_image_for_area_covered(search_result: Dict[str, Any], dir_path: str) -> None:
+        logger.info("Checking images areas. Creating image...")
         data: List[str] = []
         for index, (key, value) in enumerate(search_result.items()):
             coordinate: Any = value.get("Coordinates")[0]
@@ -189,6 +190,7 @@ class Downloader:
             img: Image = Image.open(BytesIO(img_data))
             img.save(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
             img.show(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
+            logger.info("Image saved successfully.")
             if os.path.isfile("geckodriver.log"):
                 try:
                     os.remove("geckodriver.log")
@@ -218,9 +220,6 @@ class Downloader:
         while not download_process:
             self._set_time_interval()
             self._set_max_cloud_cover()
-            self.shared.save_search_parameters(
-                start_date=self.start_date, end_date=self.end_date, cloud_cover=self.max_cloud_cover
-            )
 
             footprint = CDSE.process_footprint(self.FOOTPRINT)
             features = api.query(

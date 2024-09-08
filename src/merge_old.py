@@ -715,19 +715,19 @@ def delete_files_after_cloud_interpolation(folder, apply_cloud_interpolation):
         print("Deleting process completed successfully.", end="\n\n")
 
 
-# if __name__ == "__main__":
-#     start_time = time.time()
-#     clear_console()
-#     working_dir_address, chosen_dir, main_dir = get_info_of_existing_data()
-#     ID_file_path = choose_ID_file_(main_dir_adr=main_dir)
-#     merged_dir = create_folder_for_merged_data(chosen_dir, main_dir)
-#     cloud_directory = create_folder_for_cloud_masks(chosen_dir, main_dir)
-#     separate_bands_merging_for_one_package(working_dir_address, merged_dir, ID_file_path, cloud_directory)
-#     cleaned_folder = create_folder_for_cleaned_data(chosen_dir, main_dir)
-#     # Possible interpolation place
-#     cleaning_data_background(merged_dir, cleaned_folder)
-#     count_indexes(cleanedFolder=cleaned_folder)
-#     delete_folder(merged_dir)
-#     ask_for_deleting(working_dir_address, ID_file_path)
-#     conversion = dt.timedelta(seconds=round(time.time() - start_time))
-#     print(f"Request completed successfully. Operating time: {str(conversion)}.")
+if __name__ == "__main__":
+    start_time = time.time()
+    clear_console()
+    working_dir_address, chosen_dir, main_dir = get_info_of_existing_data()
+    ID_file_path = choose_ID_file_(main_dir_adr=main_dir)
+    merged_dir = create_folder_for_merged_data(chosen_dir, main_dir)
+    cloud_directory = create_folder_for_cloud_masks(chosen_dir, main_dir)
+    separate_bands_merging_for_one_package(working_dir_address, merged_dir, ID_file_path, cloud_directory)
+    cleaned_folder = create_folder_for_cleaned_data(chosen_dir, main_dir)
+    # Possible interpolation place
+    cleaning_data_background(merged_dir, cleaned_folder)
+    count_indexes(cleanedFolder=cleaned_folder)
+    delete_folder(merged_dir)
+    ask_for_deleting(working_dir_address, ID_file_path)
+    conversion = dt.timedelta(seconds=round(time.time() - start_time))
+    print(f"Request completed successfully. Operating time: {str(conversion)}.")
