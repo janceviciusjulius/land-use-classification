@@ -1,9 +1,5 @@
-import csv
-import datetime as dt
 import io
-import logging
 import os
-import re
 import shutil
 import sys
 import time
@@ -18,9 +14,8 @@ from PIL import Image
 from shapely import wkt
 
 import login_info
-import merge_old
 import options
-from cdse import CDSE
+from additional.cdse import CDSE
 
 
 def unzipping_data(dir_name, zipped_dir_name):

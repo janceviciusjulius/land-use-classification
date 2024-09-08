@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from io import BytesIO
-from os.path import isdir
 from shutil import copyfile, rmtree
 from sys import exit
 from time import sleep
@@ -15,7 +14,7 @@ from pandas import DataFrame
 from PIL import Image
 from shapely import wkt
 
-from cdse import CDSE
+from additional.cdse import CDSE
 from domain.shared import Shared
 from schema.downloader_info import DownloadInfo
 from schema.folder_types import FolderType
@@ -61,9 +60,6 @@ class Downloader:
             dir_path=self.folders[FolderType.PARENT],
         )
         self._download_all(api=api, info=info)
-
-    def get_value(self, value: str) -> Any:
-        return getattr(self, value)
 
     def _download_all(self, api: CDSE, info: Dict[DownloadInfo, Any]):
         while True:
@@ -222,6 +218,9 @@ class Downloader:
         while not download_process:
             self._set_time_interval()
             self._set_max_cloud_cover()
+            self.shared.save_search_parameters(
+                start_date=self.start_date, end_date=self.end_date, cloud_cover=self.max_cloud_cover
+            )
 
             footprint = CDSE.process_footprint(self.FOOTPRINT)
             features = api.query(

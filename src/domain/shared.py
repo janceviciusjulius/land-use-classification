@@ -1,8 +1,8 @@
 import os
-from json import dumps, load
+from json import dump, load
 from os.path import isdir
 from shutil import rmtree
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from zipfile import BadZipfile, ZipFile
 
 from loguru import logger
@@ -118,6 +118,10 @@ class Shared:
             self.ask_deletion(folders=folders, scenario=FolderType.PARENT)
         return self.create_folder(path=folders[FolderType.PARENT])
 
+    @staticmethod
+    def get_value(obj: Any, value: str) -> Any:
+        return getattr(obj, value)
+
     def generate_folders(self, start_date, end_date, cloud_cover) -> Dict[FolderType, str]:
         folders: Dict[FolderType, str] = {}
 
@@ -155,9 +159,11 @@ class Shared:
         return folders
 
     @staticmethod
-    def save_search_parameters(start_date: str, end_date: str, cloud_cover: str):
+    def save_search_parameters(start_date: str, end_date: str, cloud_cover: int):
         data = {
             Parameters.START_DATE: start_date,
             Parameters.END_DATE: end_date,
             Parameters.CLOUD_COVERAGE: cloud_cover,
         }
+        with open("data.json", "w") as f:
+            dump(data, f)
