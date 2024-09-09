@@ -448,7 +448,6 @@ if __name__ == "__main__":
     # Merge part
     working_dir_address, chosen_dir, main_dir = merge.prepare_path(dir_path)
 
-
     ID_file_path = merge.choose_ID_file_(main_dir_adr=main_dir)
     merged_dir = merge.create_folder_for_merged_data(chosen_dir, main_dir)
     cloud_directory = merge.create_folder_for_cloud_masks(chosen_dir, main_dir)

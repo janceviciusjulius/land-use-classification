@@ -5,19 +5,19 @@ from typing import Dict, Any
 
 # Define the Enum
 class FolderType(Enum):
-    PARENT = 'PARENT'
-    DOWNLOAD = 'DOWNLOAD'
-    ZIP = 'ZIP'
-    MOVED = 'MOVED'
-    MERGED = 'MERGED'
-    CLEANED = 'CLEANED'
-    CLOUD = 'CLOUD'
-    JOINED = 'JOINED'
-    CLASSIFIED = 'CLASSIFIED'
+    PARENT = "PARENT"
+    DOWNLOAD = "DOWNLOAD"
+    ZIP = "ZIP"
+    MOVED = "MOVED"
+    MERGED = "MERGED"
+    CLEANED = "CLEANED"
+    CLOUD = "CLOUD"
+    JOINED = "JOINED"
+    CLASSIFIED = "CLASSIFIED"
 
 
 # Example JSON data (as a string for demonstration purposes)
-json_data = '''
+json_data = """
 {
     "interpolation": true,
     "start_date": "2024-09-01",
@@ -35,14 +35,14 @@ json_data = '''
         "CLASSIFIED": "/path/to/classified"
     }
 }
-'''
+"""
 
 
 def load_json_with_enum(json_str: str, enum_type: Enum) -> Dict[str, Any]:
     data = json.loads(json_str)
 
-    if 'folders' in data:
-        data['folders'] = {enum_type[key]: value for key, value in data['folders'].items()}
+    if "folders" in data:
+        data["folders"] = {enum_type[key]: value for key, value in data["folders"].items()}
 
     return data
 
@@ -52,4 +52,4 @@ loaded_data = load_json_with_enum(json_data, FolderType)
 
 # Example usage
 print(loaded_data)
-print(type(loaded_data['folders'][FolderType.PARENT]))  # Should be <class 'str'>, showing values
+print(type(loaded_data["folders"][FolderType.PARENT]))  # Should be <class 'str'>, showing values

@@ -16,8 +16,8 @@ from schema.yes_no import YesNo
 
 
 class Shared:
-    METADATA_FILENAME = 'metadata.json'
-    CLOUD_COVER_FILENAME = 'cloud_coverage.json'
+    PARAMETERS_FILENAME = "parameters.json"
+    CLOUD_COVER_FILENAME = "cloud_coverage.json"
 
     def __init__(self):
         self.root_folders = self.create_root_folders()
@@ -172,11 +172,9 @@ class Shared:
     #
     #     return data
 
-    # def load_json(self, json_)
-
     def to_dict(self, cls_obj: Any) -> Dict[str, Any]:
         dict_: [Any, Any] = cls_obj.__dict__.copy()
-        dict_.pop('shared', None)
+        dict_.pop("shared", None)
         return self._convert_enum_keys(dict_)
 
     @staticmethod
@@ -184,9 +182,10 @@ class Shared:
         with open(path, "w") as f:
             dump(data, f, indent=4)
 
+    @staticmethod
+    def read_json(path: str) -> Dict[str, Any]:
+        with open(path, "r") as file:
+            data_dict = load(file)
+        return data_dict
 
-    def save_search_parameters(self, cls_obj: Any):
-        class_variables: Dict[str, Any] = self.to_dict(cls_obj=cls_obj)
-
-        json_file_path: str = os.path.join(cls_obj.folders[FolderType.PARENT], self.METADATA_FILENAME)
-        self.dumb_to_json(path=json_file_path, data=class_variables)
+    def generate_folders(self):

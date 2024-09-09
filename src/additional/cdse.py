@@ -6,7 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 from email.message import Message
 
-import geopandas as gpd
 import requests
 
 

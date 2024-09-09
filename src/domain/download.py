@@ -18,6 +18,7 @@ from additional.cdse import CDSE
 from domain.shared import Shared
 from schema.downloader_info import DownloadInfo
 from schema.folder_types import FolderType
+from schema.metadata_types import Metadata
 from schema.root_folders import RootFolders
 from schema.yes_no import YesNo
 
@@ -42,7 +43,7 @@ class Downloader:
         self.end_date: Optional[str] = None
         self.max_cloud_cover: Optional[int] = None
         self.folders: Optional[Dict[FolderType, str]] = None
-        self.files: Optional[Dict[str, float]] = None
+        self.files: Dict[str | Metadata, str] = {}
 
     def download_data(self):
         self.shared.clear_console()
@@ -62,7 +63,7 @@ class Downloader:
             dir_path=self.folders[FolderType.PARENT],
         )
         self._download_all(api=api, info=info)
-        self.shared.save_search_parameters(cls_obj=self)
+        self.save_search_parameters()
 
     def _download_all(self, api: CDSE, info: Dict[DownloadInfo, Any]):
         while True:
@@ -75,7 +76,9 @@ class Downloader:
                     dir=self.folders[FolderType.DOWNLOAD],
                 )
                 sleep(1)
-                self.save_downloaded_files_id(features=info[DownloadInfo.FEATURES_INFO])
+                self.files[Metadata.CLOUD_COVERAGE] = self.save_downloaded_files_id(
+                    features=info[DownloadInfo.FEATURES_INFO]
+                )
                 self.log_downloaded_files(info=info, downloaded_list=downloaded_list)
                 self.shared.unzipping_data(
                     source=self.folders[FolderType.DOWNLOAD],
@@ -100,17 +103,24 @@ class Downloader:
             else:
                 logger.error("Error. Please specify an answer.")
 
+    def save_search_parameters(self) -> str:
+        json_file_path: str = os.path.join(self.folders[FolderType.PARENT], self.shared.PARAMETERS_FILENAME)
+        self.files[Metadata.PARAMETERS] = json_file_path
+
+        class_variables: Dict[str, Any] = self.shared.to_dict(cls_obj=self)
+
+        self.shared.dumb_to_json(path=json_file_path, data=class_variables)
+        return json_file_path
+
     @staticmethod
     def _unpack_s2_bands(source, destination):
-        # Taking only the necessary data (D03)
-        files = os.listdir(source)
-        number_of_files = len(files)
-        for i in range(number_of_files):
-            temp_band_folder = os.path.join(destination, files[i])
+        files: List[str] = os.listdir(source)
+        for i in range(len(files)):
+            temp_band_folder: str = os.path.join(destination, files[i])
             os.mkdir(temp_band_folder)
             # XML part
-            dir_path = os.path.join(source, files[i])
-            dir_files = os.listdir(dir_path)
+            dir_path: str = os.path.join(source, files[i])
+            dir_files: List[str] = os.listdir(dir_path)
             for dir_file in dir_files:
                 if dir_file.startswith("MTD") and dir_file.endswith(".xml"):
                     copyfile(
@@ -118,23 +128,23 @@ class Downloader:
                         os.path.join(temp_band_folder, dir_file),
                     )
             # End of XML part
-            folder = os.path.join(source, files[i], "GRANULE")
-            data_name = os.listdir(folder)
-            folder = os.path.join(folder, data_name[0], "IMG_DATA")
-            img_data = os.listdir(folder)
+            folder: str = os.path.join(source, files[i], "GRANULE")
+            data_name: List[str] = os.listdir(folder)
+            folder: str = os.path.join(folder, data_name[0], "IMG_DATA")
+            img_data: List[str] = os.listdir(folder)
             if len(img_data) != 3:
                 for j in range(len(img_data)):
-                    band = os.path.join(folder, img_data[j])
-                    temp_band_folder = os.path.join(destination, files[i], img_data[j])
+                    band: str = os.path.join(folder, img_data[j])
+                    temp_band_folder: str = os.path.join(destination, files[i], img_data[j])
                     copyfile(band, temp_band_folder)
             elif len(img_data) == 3:
-                folders = os.listdir(folder)
+                folders: List[str] = os.listdir(folder)
                 for j in range(len(folders)):
-                    path_to_folders = os.path.join(folder, folders[j])
-                    img_data = os.listdir(path_to_folders)
+                    path_to_folders: str = os.path.join(folder, folders[j])
+                    img_data: List[str] = os.listdir(path_to_folders)
                     for z in range(len(img_data)):
-                        band = os.path.join(path_to_folders, img_data[z])
-                        temp_band_folder = os.path.join(destination, files[i], img_data[z])
+                        band: str = os.path.join(path_to_folders, img_data[z])
+                        temp_band_folder: str = os.path.join(destination, files[i], img_data[z])
                         copyfile(band, temp_band_folder)
             logger.info(f"Moved {i + 1} file.")
         logger.info("Band exclusion complete.")
@@ -151,18 +161,16 @@ class Downloader:
         )
 
     # TODO: CHANGE TO JSON and save in parent as cloud_info.json
-    def save_downloaded_files_id(self, features: Dict[str, Any]):
-        path = os.path.join(self.folders[FolderType.PARENT], self.shared.CLOUD_COVER_FILENAME)
+    def save_downloaded_files_id(self, features: Dict[str, Any]) -> str:
+        path: str = os.path.join(self.folders[FolderType.PARENT], self.shared.CLOUD_COVER_FILENAME)
         data: Dict[str, Any] = {}
         for feature in features:
             title: str = features[feature]["Title"]
             cloud: Union[str, int] = features[feature]["CloudCover"]
             data[title] = cloud
         self.shared.dumb_to_json(path=path, data=data)
-
         logger.info("Downloaded data cloud information successfully saved.")
-
-
+        return path
 
     @staticmethod
     def _create_image_for_area_covered(search_result: Dict[str, Any], dir_path: str) -> None:
