@@ -107,37 +107,49 @@ class Merge:
                 file_name: str = os.path.basename(band_path).replace(".jp2", ".tiff")
                 new_band_name: str = f"Processed {file_name}"
                 output_path: str = os.path.join(temp_working_dir_name, new_band_name)
-                self._remove_clouds(scl_band=cloud_10_filename, band=band_path, output_path=output_path)
+                self._remove_clouds(
+                    scl_10_band=cloud_10_filename,
+                    scl_20_band=cloud_20_filename,
+                    band=band_path,
+                    output_path=output_path,
+                )
 
 
-    def _remove_clouds(self, scl_band: str, band: str, output_path: str):
+    def _remove_clouds(self, scl_10_band: str, scl_20_band: str, band: str, output_path: str):
         values_to_check: List[int] = [1, 3, 8, 9, 10, 11]
 
-        with rasterio.open(scl_band) as second_raster:
-            second_band = second_raster.read(1)
+        with rasterio.open(scl_10_band) as second_10_raster:
+            second_band = second_10_raster.read(1)  # Read the cloud mask
+
             with rasterio.open(band) as first_raster:
                 profile = first_raster.profile
                 modified_layers = []
 
+                if second_band.shape != first_raster.shape:
+                    with rasterio.open(scl_20_band) as second_20_raster:
+                        second_band = second_20_raster.read(1)  # Read the cloud mask
+
                 # Iterate through each layer in the first raster
-                for i in range(1, first_raster.count + 1):  # `count` gives the number of layers
-                    # Read each layer from the first raster
+                for i in range(1, first_raster.count + 1):
                     first_band = first_raster.read(i)
 
                     # Apply the condition: set pixels to 0 where second raster has values in the list
                     first_band = np.where(np.isin(second_band, values_to_check), 0, first_band)
 
+                    # Convert to a supported data type (e.g., uint16 or int16)
+                    if first_band.dtype == "float32":
+                        first_band = first_band.astype(np.uint16)
+
                     # Add the modified band to the list
                     modified_layers.append(first_band)
 
-                # Update the profile (if necessary, you can adjust datatype, etc.)
-                profile.update(dtype=rasterio.float32)
+                # Update the profile to use a supported data type
+                profile.update(dtype=rasterio.uint16)
 
                 # Write the modified layers to a new raster file
-                with rasterio.open(output_path, 'w', **profile) as dst:
+                with rasterio.open(output_path, "w", **profile) as dst:
                     for idx, layer in enumerate(modified_layers, 1):  # Layers are 1-indexed
                         dst.write(layer, idx)
-
 
     def _create_folders(self) -> None:
         self.shared.create_folder(path=self.folders[FolderType.MERGED])
