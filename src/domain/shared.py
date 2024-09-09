@@ -16,6 +16,8 @@ from schema.yes_no import YesNo
 
 
 class Shared:
+    METADATA_FILENAME = 'metadata.json'
+    CLOUD_COVER_FILENAME = 'cloud_coverage.json'
 
     def __init__(self):
         self.root_folders = self.create_root_folders()
@@ -162,7 +164,7 @@ class Shared:
 
     # TODO: ADD READING JSON SUPPORT
     # @staticmethod
-    # def load_json_with_enum(json_str: str, enum_type: Enum) -> Dict[str, Any]:
+    # def _load_json_with_enum(json_str: str, enum_type: Enum) -> Dict[str, Any]:
     #     data = loads(json_str)
     #
     #     if 'folders' in data:
@@ -170,15 +172,21 @@ class Shared:
     #
     #     return data
 
+    # def load_json(self, json_)
+
     def to_dict(self, cls_obj: Any) -> Dict[str, Any]:
         dict_: [Any, Any] = cls_obj.__dict__.copy()
         dict_.pop('shared', None)
         return self._convert_enum_keys(dict_)
 
+    @staticmethod
+    def dumb_to_json(path: str, data: Dict[str, Any]):
+        with open(path, "w") as f:
+            dump(data, f, indent=4)
+
 
     def save_search_parameters(self, cls_obj: Any):
         class_variables: Dict[str, Any] = self.to_dict(cls_obj=cls_obj)
 
-        json_file_path = os.path.join(cls_obj.folders[FolderType.PARENT], "data.json")
-        with open(json_file_path, "w") as f:
-            dump(class_variables, f, indent=4)
+        json_file_path: str = os.path.join(cls_obj.folders[FolderType.PARENT], self.METADATA_FILENAME)
+        self.dumb_to_json(path=json_file_path, data=class_variables)

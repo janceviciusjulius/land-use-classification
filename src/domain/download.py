@@ -45,6 +45,7 @@ class Downloader:
         self.files: Optional[Dict[str, float]] = None
 
     def download_data(self):
+        self.shared.clear_console()
         api = self._login()
         info: Dict[DownloadInfo, Any] = self._generate_parameters(api=api)
 
@@ -74,12 +75,7 @@ class Downloader:
                     dir=self.folders[FolderType.DOWNLOAD],
                 )
                 sleep(1)
-                self.save_downloaded_files_id(
-                    features=info[DownloadInfo.FEATURES_INFO],
-                    start_time=self.start_date,
-                    end_time=self.end_date,
-                    max_cloud=self.max_cloud_cover,
-                )
+                self.save_downloaded_files_id(features=info[DownloadInfo.FEATURES_INFO])
                 self.log_downloaded_files(info=info, downloaded_list=downloaded_list)
                 self.shared.unzipping_data(
                     source=self.folders[FolderType.DOWNLOAD],
@@ -155,17 +151,18 @@ class Downloader:
         )
 
     # TODO: CHANGE TO JSON and save in parent as cloud_info.json
-    def save_downloaded_files_id(self, features: Dict[str, Any], start_time: str, end_time: str, max_cloud: int):
-        filename: str = start_time + ".." + end_time + " " + "0" + "-" + str(max_cloud) + "%.txt"
-        path = os.path.join(self.shared.root_folders[RootFolders.ID], filename)
+    def save_downloaded_files_id(self, features: Dict[str, Any]):
+        path = os.path.join(self.folders[FolderType.PARENT], self.shared.CLOUD_COVER_FILENAME)
+        data: Dict[str, Any] = {}
         for feature in features:
             title: str = features[feature]["Title"]
             cloud: Union[str, int] = features[feature]["CloudCover"]
-            with open(path, "a") as f:
-                f.write(title + "\n")
-                f.write(str(cloud) + "\n")
-                f.close()
+            data[title] = cloud
+        self.shared.dumb_to_json(path=path, data=data)
+
         logger.info("Downloaded data cloud information successfully saved.")
+
+
 
     @staticmethod
     def _create_image_for_area_covered(search_result: Dict[str, Any], dir_path: str) -> None:
