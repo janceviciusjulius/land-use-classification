@@ -8,7 +8,7 @@ from domain.shared import Shared
 def download_algorithm():
     shared: Shared = Shared()
     downloader: Downloader = Downloader(shared=shared)
-    # merge: Merge = Merge(shared=shared)
+    merge: Merge = Merge(shared=shared)
     downloader.download_data()
 
 
