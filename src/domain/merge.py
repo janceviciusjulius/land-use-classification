@@ -82,32 +82,13 @@ class Merge:
             scl: str = self._match_band(band_type=AddBandType.SCL, tile_folder=temp_working_dir_name)
             xml: str = self._match_band(band_type=AddBandType.XML, tile_folder=temp_working_dir_name)
 
-            gdal.Warp(
-                destNameOrDestDS=cloud_10_filename,
-                srcDSOrSrcDSTab=scl,
-                format="GTiff",
-                options=gdal.WarpOptions(
-                    creationOptions=["COMPRESS=DEFLATE", "TILED=YES"],
-                    xRes=10,
-                    yRes=10,
-                    callback=self.shared.progress_cb,
-                    callback_data=".",
-                ),
-            )
-            gdal.Warp(
-                destNameOrDestDS=cloud_20_filename,
-                srcDSOrSrcDSTab=scl,
-                format="GTiff",
-                options=gdal.WarpOptions(
-                    creationOptions=["COMPRESS=DEFLATE", "TILED=YES"],
-                    xRes=20,
-                    yRes=20,
-                    callback=self.shared.progress_cb,
-                    callback_data=".",
-                ),
-            )
+            self.cloud_warp(dest=cloud_10_filename, src=scl, res=10)
+            self.cloud_warp(dest=cloud_20_filename, src=scl, res=20)
+
             logger.info(f"Successfully prepared {index+1} file cloud files.")
             band_list: Tuple[str, ...] = (b4, b3, b2, b5, b6, b7, b8, b8a, b11, b12)
+
+            processed_bands: List[str] = []
             for band_path in band_list:
                 file_name: str = os.path.basename(band_path).replace(".jp2", ".tiff")
                 new_band_name: str = f"Processed {file_name}"
@@ -118,16 +99,29 @@ class Merge:
                     band=band_path,
                     output_path=output_path,
                 )
-            logger.info("DONE")
+                processed_bands.append(output_path)
+        
 
+
+    def cloud_warp(self, dest: str, src: str, res: int):
+        gdal.Warp(
+            destNameOrDestDS=dest,
+            srcDSOrSrcDSTab=src,
+            format="GTiff",
+            options=gdal.WarpOptions(
+                creationOptions=["COMPRESS=DEFLATE", "TILED=YES"],
+                xRes=res,
+                yRes=res,
+                callback=self.shared.progress_cb,
+                callback_data=".",
+            ),
+        )
     def _remove_clouds(self, scl_10_band: str, scl_20_band: str, band: str, output_path: str):
         values_to_check: List[int] = [1, 3, 8, 9, 10, 11]
 
-        # Open the high-resolution SCL band (scl_band)
         with rasterio.open(scl_10_band) as second_raster:
             scl_10_band = second_raster.read(1)  # Read the cloud mask from scl_band
 
-            # Open the lower-resolution SCL band (scl_20_band)
             with rasterio.open(scl_20_band) as scl_20_raster:
                 scl_20_band_data = scl_20_raster.read(1)  # Read the cloud mask from scl_20_band
 
@@ -135,48 +129,34 @@ class Merge:
                 profile = first_raster.profile
                 modified_layers = []
 
-                print("BAND", first_raster.shape)
-                print("SCL 10:", scl_10_band.shape)
-                print("SCL 20:", scl_20_band_data.shape)
-
-                # Check if the high-resolution SCL band matches the first raster shape
                 if scl_10_band.shape == first_raster.shape:
                     mask_band = scl_10_band  # Use the high-resolution mask (10980, 10980)
-                    logger.info("NAUDOJU BEST")
                 else:
-                    # If not, check if the lower-resolution SCL band matches the first raster shape
                     if scl_20_band_data.shape == first_raster.shape:
                         mask_band = scl_20_band_data  # Use the lower-resolution mask (5490, 5490)
-                        logger.info("NAUDOJU 20")
                     else:
-                        logger.info("NESAMONE DARAU")
-                        # If neither match, resample the high-res SCL to match the first raster
                         mask_band = second_raster.read(
                             1,
                             out_shape=(first_raster.height, first_raster.width),
                             resampling=Resampling.nearest,  # Resampling method (nearest neighbor in this case)
                         )
 
-                # Iterate through each layer in the first raster
                 for i in range(1, first_raster.count + 1):
                     first_band = first_raster.read(i)
 
-                    # Apply the condition: set pixels to 0 where the mask band has values in the list
                     first_band = np.where(np.isin(mask_band, values_to_check), 0, first_band)
+                    first_band[first_band == 1] = 0
 
                     # Convert to a supported data type (e.g., uint16)
-                    if first_band.dtype == "float32":
-                        first_band = first_band.astype(np.uint16)
+                    # if first_band.dtype == "float32":
+                    #     first_band = first_band.astype(np.int16)
 
-                    # Add the modified band to the list
                     modified_layers.append(first_band)
 
-                # Update the profile to use a supported data type
                 profile.update(dtype=rasterio.uint16)
 
-                # Write the modified layers to a new raster file
                 with rasterio.open(output_path, "w", **profile) as dst:
-                    for idx, layer in enumerate(modified_layers, 1):  # Layers are 1-indexed
+                    for idx, layer in enumerate(modified_layers, 1):
                         dst.write(layer, idx)
 
 

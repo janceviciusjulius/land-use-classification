@@ -134,7 +134,7 @@
         <stdDevFactor>2</stdDevFactor>
       </minMaxOrigin>
       <colorPalette>
-        <paletteEntry value="0" alpha="255" color="#e24756" label="0"/>
+        <paletteEntry value="0" alpha="255" color="#0089a4" label="0"/>
       </colorPalette>
       <colorramp type="randomcolors" name="[source]">
         <Option/>
