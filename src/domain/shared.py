@@ -193,3 +193,12 @@ class Shared:
         delete_xml = [band for band in os.listdir(dir_name) if band.endswith("xml") and not band.startswith("MTD")]
         for xml in delete_xml:
             os.remove(os.path.join(dir_name, xml))
+
+    @staticmethod
+    def progress_cb(complete, message, cb_data):
+        if int(complete * 100) % 10 == 0:
+            print(f"{complete * 100:.0f}", end="", flush=True)
+        elif int(complete * 100) % 3 == 0:
+            print(f"{cb_data}", end="", flush=True)
+        if int(complete * 100) == 100:
+            print(f"", end=" - done.\n", flush=True)
