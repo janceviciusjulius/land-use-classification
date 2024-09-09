@@ -17,7 +17,7 @@ from schema.yes_no import YesNo
 
 class Shared:
     PARAMETERS_FILENAME = "parameters.json"
-    CLOUD_COVER_FILENAME = "cloud_coverage.json"
+    INFORMATION_FILENAME = "information.json"
 
     def __init__(self):
         self.root_folders = self.create_root_folders()

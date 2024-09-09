@@ -5,7 +5,8 @@ class Metadata(str, Enum):
     PARAMETERS = "parameters"
     CLOUD_COVERAGE = "cloud_coverage"
 
-class Parameters(str, Enum):
+
+class ParametersJson(str, Enum):
     INTERPOLATION = "interpolation"
     START_DATE = "start_date"
     END_DATE = "end_date"
@@ -14,3 +15,8 @@ class Parameters(str, Enum):
     FILES = "files"
 
 
+class CloudCoverageJson(str, Enum):
+    TITLE = "title"
+    CLOUD = "cloud"
+    DATE = "date"
+    TILE = "tile"

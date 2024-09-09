@@ -18,7 +18,7 @@ from additional.cdse import CDSE
 from domain.shared import Shared
 from schema.downloader_info import DownloadInfo
 from schema.folder_types import FolderType
-from schema.metadata_types import Metadata
+from schema.metadata_types import Metadata, ParametersJson, CloudCoverageJson
 from schema.root_folders import RootFolders
 from schema.yes_no import YesNo
 
@@ -162,12 +162,16 @@ class Downloader:
 
     # TODO: CHANGE TO JSON and save in parent as cloud_info.json
     def save_downloaded_files_id(self, features: Dict[str, Any]) -> str:
-        path: str = os.path.join(self.folders[FolderType.PARENT], self.shared.CLOUD_COVER_FILENAME)
+        path: str = os.path.join(self.folders[FolderType.PARENT], self.shared.INFORMATION_FILENAME)
         data: Dict[str, Any] = {}
         for feature in features:
             title: str = features[feature]["Title"]
-            cloud: Union[str, int] = features[feature]["CloudCover"]
-            data[title] = {"title":cloud, "cloud":cloud, "date": }
+            data[title] = {
+                CloudCoverageJson.TITLE: features[feature]["Title"],
+                CloudCoverageJson.CLOUD: features[feature]["CloudCover"],
+                CloudCoverageJson.DATE: features[feature]["Date"],
+                CloudCoverageJson.TILE: title.split("_")[5],
+            }
         self.shared.dumb_to_json(path=path, data=data)
         logger.info("Downloaded data cloud information successfully saved.")
         return path

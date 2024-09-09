@@ -14,7 +14,7 @@ class FolderType(str, Enum):
 
 
 class FolderPrefix(str, Enum):
-    DOWNLOAD = "Sentinel-2"
+    DOWNLOAD = "SENTINEL-2"
     ZIP = "ZIP"
     MOVED = "MOVED"
     MERGED = "MERGED"

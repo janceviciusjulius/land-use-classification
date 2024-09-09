@@ -5,7 +5,7 @@ from os import listdir
 
 from domain.shared import Shared
 from schema.folder_types import FolderType
-from schema.metadata_types import Metadata
+from schema.metadata_types import Metadata, ParametersJson, CloudCoverageJson
 
 
 # TODO: CONTINUE WORKING ON MERGE REFACTORING
@@ -36,20 +36,28 @@ class Merge:
         self._merge()
 
     def _merge(self):
-        cloud_percentages: Dict[str, float] = self.shared.read_json(path=self.files[Metadata.CLOUD_COVERAGE])
+        files_information: Dict[str, float] = self.shared.read_json(path=self.files[Metadata.CLOUD_COVERAGE])
         files: List[str] = listdir(self.folders[FolderType.DOWNLOAD])
         logger.info(f"Merge process of the selected folder starts. Folders to merge: {len(files)}")
 
-        for file in files:
+        for index, file in enumerate(files):
             temp_working_dir_name: str = os.path.join(self.folders[FolderType.DOWNLOAD], file)
             self.shared.delete_all_xml(temp_working_dir_name)
 
+            cloud_percentage: float = files_information[file][CloudCoverageJson.CLOUD]
+            date: str = files_information[file][CloudCoverageJson.DATE]
+            tile: str = files_information[file][CloudCoverageJson.TILE]
 
-            cloud_percentage: float = cloud_percentages[file]
+            out_filename: str = os.path.join(
+                self.folders[FolderType.MERGED], f"{index+1}. {date} {tile} {cloud_percentage}%.tiff"
+            )
 
-            output_file_name = os.path.join(
-                se,
-                (str(i) + ". " + date + " " + str(files[i - 1]).split("_")[5] + " " + str(cloud_percentage) + "%.tiff"),
+            cloud_10_filename: str = os.path.join(
+                self.folders[FolderType.CLOUD], f"{index+1}. Cloud {date} {tile} {cloud_percentage}%.tiff"
+            )
+
+            cloud_20_filename = os.path.join(
+                self.folders[FolderType.CLOUD], f"{index+1}. Cloud {date} {tile} {cloud_percentage}%_20m.tiff"
             )
 
     def _create_folders(self) -> None:
