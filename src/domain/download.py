@@ -167,7 +167,7 @@ class Downloader:
         for feature in features:
             title: str = features[feature]["Title"]
             cloud: Union[str, int] = features[feature]["CloudCover"]
-            data[title] = cloud
+            data[title] = {"title":cloud, "cloud":cloud, "date": }
         self.shared.dumb_to_json(path=path, data=data)
         logger.info("Downloaded data cloud information successfully saved.")
         return path

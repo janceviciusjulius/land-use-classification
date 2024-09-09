@@ -8,8 +8,17 @@ from domain.shared import Shared
 def download_algorithm():
     shared: Shared = Shared()
     downloader: Downloader = Downloader(shared=shared)
-    merge: Merge = Merge(shared=shared)
     downloader.download_data()
+    merge: Merge = Merge(
+        shared=shared,
+        interpolation=downloader.interpolation,
+        start_date=downloader.start_date,
+        end_date=downloader.end_date,
+        max_cloud_cover=downloader.max_cloud_cover,
+        folders=downloader.folders,
+        files=downloader.files,
+    )
+    merge.process_data()
 
 
 def main_page():

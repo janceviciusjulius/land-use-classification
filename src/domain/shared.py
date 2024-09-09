@@ -188,4 +188,8 @@ class Shared:
             data_dict = load(file)
         return data_dict
 
-    def generate_folders(self):
+    @staticmethod
+    def delete_all_xml(dir_name):
+        delete_xml = [band for band in os.listdir(dir_name) if band.endswith("xml") and not band.startswith("MTD")]
+        for xml in delete_xml:
+            os.remove(os.path.join(dir_name, xml))
