@@ -1,5 +1,7 @@
 import os
-from typing import Optional, Dict, List, Union, Tuple
+import subprocess
+from heapq import merge
+from typing import Optional, Dict, List, Union, Tuple, Any
 from loguru import logger
 from os import listdir
 from osgeo import gdal
@@ -14,8 +16,8 @@ from schema.band_types import BandType, AddBandType
 from schema.folder_types import FolderType
 from schema.metadata_types import Metadata, ParametersJson, CloudCoverageJson
 
+gdal.UseExceptions()
 
-# TODO: CONTINUE WORKING ON MERGE REFACTORING
 class Merge:
     GDAL_MERGE: str = "gdal_merge.py"
 
@@ -82,8 +84,8 @@ class Merge:
             scl: str = self._match_band(band_type=AddBandType.SCL, tile_folder=temp_working_dir_name)
             xml: str = self._match_band(band_type=AddBandType.XML, tile_folder=temp_working_dir_name)
 
-            self.cloud_warp(dest=cloud_10_filename, src=scl, res=10)
-            self.cloud_warp(dest=cloud_20_filename, src=scl, res=20)
+            self._cloud_warp(dest=cloud_10_filename, src=scl, res=10)
+            self._cloud_warp(dest=cloud_20_filename, src=scl, res=20)
 
             logger.info(f"Successfully prepared {index+1} file cloud files.")
             band_list: Tuple[str, ...] = (b4, b3, b2, b5, b6, b7, b8, b8a, b11, b12)
@@ -91,8 +93,7 @@ class Merge:
             processed_bands: List[str] = []
             for band_path in band_list:
                 file_name: str = os.path.basename(band_path).replace(".jp2", ".tiff")
-                new_band_name: str = f"Processed {file_name}"
-                output_path: str = os.path.join(temp_working_dir_name, new_band_name)
+                output_path: str = os.path.join(temp_working_dir_name, f"Processed {file_name}")
                 self._remove_clouds(
                     scl_10_band=cloud_10_filename,
                     scl_20_band=cloud_20_filename,
@@ -100,10 +101,19 @@ class Merge:
                     output_path=output_path,
                 )
                 processed_bands.append(output_path)
-        
 
+            parameters = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
+            veg_index_bands = []
 
-    def cloud_warp(self, dest: str, src: str, res: int):
+            merge_command = []
+            merge_command.extend(parameters)
+            merge_command.extend(processed_bands)
+            merge_command.extend([processed_bands[0], processed_bands[0], processed_bands[0]])
+
+            subprocess.run(merge_command, check=True)
+            logger.info(f"Successfully merged {index+1} file.")  # (M01)
+
+    def _cloud_warp(self, dest: str, src: str, res: int):
         gdal.Warp(
             destNameOrDestDS=dest,
             srcDSOrSrcDSTab=src,
@@ -116,6 +126,7 @@ class Merge:
                 callback_data=".",
             ),
         )
+
     def _remove_clouds(self, scl_10_band: str, scl_20_band: str, band: str, output_path: str):
         values_to_check: List[int] = [1, 3, 8, 9, 10, 11]
 
@@ -158,7 +169,6 @@ class Merge:
                 with rasterio.open(output_path, "w", **profile) as dst:
                     for idx, layer in enumerate(modified_layers, 1):
                         dst.write(layer, idx)
-
 
     def _create_folders(self) -> None:
         self.shared.create_folder(path=self.folders[FolderType.MERGED])
