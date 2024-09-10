@@ -26,6 +26,25 @@ class Merge:
     GDAL_MERGE: str = "gdal_merge.py"
     XML_PARSER: str = "lxml-xml"
     XML_OFFSET: str = "BOA_ADD_OFFSET"
+    LITHUANIA_TILES: List[str] = [
+        "T34UDG",
+        "T34VDH",
+        "T34VEH",
+        "T34UEG",
+        "T34VFH",
+        "T34UFG",
+        "T34UFF",
+        "T34UFE",
+        "T34UGE",
+        "T34UEF",
+        "T35VLC",
+        "T35ULB",
+        "T35ULA",
+        "T35ULV",
+        "T35VMC",
+        "T35UMB",
+        "T35UMA",
+    ]
     BAND_NAMES: Dict[int, str] = {
         1: "Band_4",
         2: "Band_3",
@@ -66,6 +85,20 @@ class Merge:
         self._merge()
         self._set_band_names()
         self._cleaning_data()
+        # TODO: CHECK WORKING
+        self.shared.update_information(
+            folder=self.folders[FolderType.CLEANED], json_file_path=self.files[Metadata.CLOUD_COVERAGE]
+        )
+
+        # self._cloud_interpolation()
+
+    # def _cloud_interpolation(self) -> None:
+    #     if self.interpolation:
+    #         cloud_data_path: str = self.files[Metadata.CLOUD_COVERAGE]
+    #         cloud_data: Dict[str, Dict[str, Any]] = self.shared.read_json(path=cloud_data_path)
+    #
+    #
+    #     return
 
     def _cleaning_data(self):
         logger.info(f"Start of images cleaning processing ...")
@@ -90,7 +123,6 @@ class Merge:
                 band.SetDescription(self.BAND_NAMES[band_number + 1])
             raster = None
         logger.info("Successfully set band names.")
-
 
     def _merge(self) -> None:
         files_information: Dict[str, float] = self.shared.read_json(path=self.files[Metadata.CLOUD_COVERAGE])
@@ -206,7 +238,6 @@ class Merge:
                 callback_data=".",
             ),
         )
-
 
     def _remove_clouds(self, scl_10_band: str, scl_20_band: str, band: str, output_path: str):
         values_to_check: List[int] = [1, 3, 8, 9, 10, 11]

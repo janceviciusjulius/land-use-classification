@@ -9,7 +9,9 @@ from zipfile import BadZipfile, ZipFile
 
 from loguru import logger
 
+from schema.file_modes import FileMode
 from schema.folder_types import FolderPrefix, FolderType
+from schema.metadata_types import CloudCoverageJson
 from schema.parameters import Parameters
 from schema.root_folders import RootFolders
 from schema.yes_no import YesNo
@@ -182,14 +184,35 @@ class Shared:
 
     @staticmethod
     def dumb_to_json(path: str, data: Dict[str, Any]):
-        with open(path, "w") as f:
+        with open(path, FileMode.WRITE) as f:
             dump(data, f, indent=4)
 
     @staticmethod
     def read_json(path: str) -> Dict[str, Any]:
-        with open(path, "r") as file:
+        with open(path, FileMode.READ) as file:
             data_dict = load(file)
         return data_dict
+
+    def update_information(self, folder: str, json_file_path: str):
+        data: Dict[str, Dict[str, Any]] = self.read_json(path=json_file_path)
+
+        for file_id, file_details in data.items():
+            date: str = file_details[CloudCoverageJson.DATE]
+            tile: str = file_details[CloudCoverageJson.TILE]
+            cloud: str = str(file_details[CloudCoverageJson.CLOUD])
+
+            match_file_name: str = self._match_file_with_criteria(folder=folder, date=date, tile=tile, cloud=cloud)
+            file_details[CloudCoverageJson.FILENAME] = match_file_name
+
+        self.dumb_to_json(data=data, path=json_file_path)
+
+    @staticmethod
+    def _match_file_with_criteria(folder: str, date: str, tile: str, cloud: str) -> str:
+        files_in_folder: List[str] = os.listdir(folder)
+        for file in files_in_folder:
+            if date in file and tile in file and str(cloud) in file:
+                return os.path.join(folder, file)
+        return None
 
     @staticmethod
     def delete_all_xml(dir_name):
