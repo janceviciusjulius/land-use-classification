@@ -42,7 +42,10 @@ class Shared:
 
     @staticmethod
     def create_folder(path: str) -> str:
-        os.mkdir(path)
+        try:
+            os.mkdir(path)
+        except FileExistsError:
+            pass
         return path
 
     def create_root_folders(self) -> Dict[RootFolders, str]:

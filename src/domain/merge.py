@@ -1,25 +1,46 @@
 import os
 import subprocess
-from heapq import merge
 from typing import Optional, Dict, List, Union, Tuple, Any
+
+from bs4 import BeautifulSoup
 from loguru import logger
 from os import listdir
 from osgeo import gdal
+from osgeo.gdal import Band, Dataset
 import numpy as np
 import rasterio
 from rasterio.enums import Resampling
 
-
 from domain.shared import Shared
 from exceptions.exceptions import InvalidParameterException
 from schema.band_types import BandType, AddBandType
+from schema.file_modes import FileMode
 from schema.folder_types import FolderType
+from schema.file_types import FileType
 from schema.metadata_types import Metadata, ParametersJson, CloudCoverageJson
 
 gdal.UseExceptions()
 
+
 class Merge:
     GDAL_MERGE: str = "gdal_merge.py"
+    XML_PARSER: str = "lxml-xml"
+    XML_OFFSET: str = "BOA_ADD_OFFSET"
+    BAND_NAMES: Dict[int, str] = {
+        1: "Band_4",
+        2: "Band_3",
+        3: "Band_2",
+        4: "Band_5",
+        5: "Band_6",
+        6: "Band_7",
+        7: "Band_8",
+        8: "Band_8A",
+        9: "Band_11",
+        10: "Band_12",
+        11: "NDTI",
+        12: "NDVIre",
+        13: "MNDWI",
+    }
 
     def __init__(
         self,
@@ -39,17 +60,45 @@ class Merge:
         self.folders: [Dict[FolderType, str]] = folders
         self.files: Dict[str | Metadata, str] = files
 
-    def process_data(self):
+    def process_data(self) -> None:
         logger.info("Starting merging...")
         self._create_folders()
         self._merge()
+        self._set_band_names()
+        self._cleaning_data()
 
-    def _merge(self):
+    def _cleaning_data(self):
+        logger.info(f"Start of images cleaning processing ...")
+        files: List[str] = os.listdir(self.folders[FolderType.MERGED])
+        input_file_paths: List[str] = [os.path.join(self.folders[FolderType.MERGED], file) for file in files]
+        output_file_paths: List[str] = [os.path.join(self.folders[FolderType.CLEANED], file) for file in files]
+
+        for index, (input_file_path, output_file_path) in enumerate(zip(input_file_paths, output_file_paths)):
+            self._clean_warp(input_file_path=input_file_path, output_file_path=output_file_path)
+            logger.info(f"Processed {index + 1} file")
+        logger.info(f"End of images cleaning processing.")
+
+    def _set_band_names(self):
+        files: List[str] = os.listdir(self.folders[FolderType.MERGED])
+        file_paths: List[str] = [os.path.join(self.folders[FolderType.MERGED], file) for file in files]
+        logger.info("Setting band names...")
+        for file_path in file_paths:
+            raster: Any = gdal.Open(file_path, 1)
+            number_of_bands: int = raster.RasterCount
+            for band_number in range(number_of_bands):
+                band: Band = raster.GetRasterBand(band_number + 1)
+                band.SetDescription(self.BAND_NAMES[band_number + 1])
+            raster = None
+        logger.info("Successfully set band names.")
+
+
+    def _merge(self) -> None:
         files_information: Dict[str, float] = self.shared.read_json(path=self.files[Metadata.CLOUD_COVERAGE])
         files: List[str] = listdir(self.folders[FolderType.DOWNLOAD])
         logger.info(f"Merge process of the selected folder starts. Folders to merge: {len(files)}")
 
         for index, file in enumerate(files):
+            merge_command: List[str] = []
             temp_working_dir_name: str = os.path.join(self.folders[FolderType.DOWNLOAD], file)
             self.shared.delete_all_xml(temp_working_dir_name)
 
@@ -59,15 +108,15 @@ class Merge:
 
             out_filename: str = os.path.join(
                 self.folders[FolderType.MERGED],
-                f"{index+1}. {date} {tile} {cloud_percentage}%.tiff",
+                f"{index+1}. {date} {tile} {cloud_percentage}%{FileType.TIFF.value}",
             )
             cloud_10_filename: str = os.path.join(
                 self.folders[FolderType.CLOUD],
-                f"{index+1}. Cloud {date} {tile} {cloud_percentage}%.tiff",
+                f"{index+1}. Cloud {date} {tile} {cloud_percentage}%{FileType.TIFF.value}",
             )
             cloud_20_filename = os.path.join(
                 self.folders[FolderType.CLOUD],
-                f"{index+1}. Cloud {date} {tile} {cloud_percentage}%_20m.tiff",
+                f"{index+1}. Cloud {date} {tile} {cloud_percentage}%_20m{FileType.TIFF.value}",
             )
 
             b2: str = self._match_band(band_type=BandType.B2, tile_folder=temp_working_dir_name)
@@ -92,7 +141,7 @@ class Merge:
 
             processed_bands: List[str] = []
             for band_path in band_list:
-                file_name: str = os.path.basename(band_path).replace(".jp2", ".tiff")
+                file_name: str = os.path.basename(band_path).replace(FileType.JP2.value, FileType.TIFF.value)
                 output_path: str = os.path.join(temp_working_dir_name, f"Processed {file_name}")
                 self._remove_clouds(
                     scl_10_band=cloud_10_filename,
@@ -102,18 +151,35 @@ class Merge:
                 )
                 processed_bands.append(output_path)
 
-            parameters = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
-            veg_index_bands = []
+            parameters: List[str] = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
+            veg_index_bands: List[str] = [processed_bands[0], processed_bands[0], processed_bands[0]]
 
-            merge_command = []
             merge_command.extend(parameters)
             merge_command.extend(processed_bands)
-            merge_command.extend([processed_bands[0], processed_bands[0], processed_bands[0]])
+            merge_command.extend(veg_index_bands)
 
             subprocess.run(merge_command, check=True)
-            logger.info(f"Successfully merged {index+1} file.")  # (M01)
+            logger.info(f"Successfully merged {index+1} file.")
 
-    def _cloud_warp(self, dest: str, src: str, res: int):
+            with open(xml, FileMode.READ) as xml_file:
+                data = xml_file.read()
+
+            bs_data: BeautifulSoup = BeautifulSoup(data, self.XML_PARSER)
+            offset: List[BeautifulSoup] = bs_data.find_all(self.XML_OFFSET)
+            offset_values = [element.text for element in offset]
+            if all(offset_values) and len(offset_values) > 0:
+                offset_value: int = int(offset_values[0])
+                raster: Optional[Dataset] = gdal.Open(out_filename, 1)
+                raster_array: Optional[np.ndarray] = raster.ReadAsArray()
+                raster_array: Optional[np.ndarray] = raster_array + offset_value
+                raster_array[raster_array < 0] = 0
+                raster.WriteArray(raster_array)
+                logger.info(f"Successfully changed {index+1} file pixel values.")
+                raster, raster_array = None, None
+        self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
+        logger.info("End of merging process")
+
+    def _cloud_warp(self, dest: str, src: str, res: int) -> None:
         gdal.Warp(
             destNameOrDestDS=dest,
             srcDSOrSrcDSTab=src,
@@ -127,33 +193,48 @@ class Merge:
             ),
         )
 
+    def _clean_warp(self, input_file_path: str, output_file_path: str) -> None:
+        gdal.Warp(
+            output_file_path,
+            input_file_path,
+            format="GTiff",
+            options=gdal.WarpOptions(
+                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],
+                cropToCutline=True,
+                dstNodata=0,
+                callback=self.shared.progress_cb,
+                callback_data=".",
+            ),
+        )
+
+
     def _remove_clouds(self, scl_10_band: str, scl_20_band: str, band: str, output_path: str):
         values_to_check: List[int] = [1, 3, 8, 9, 10, 11]
 
         with rasterio.open(scl_10_band) as second_raster:
-            scl_10_band = second_raster.read(1)  # Read the cloud mask from scl_band
+            scl_10_band = second_raster.read(1)
 
             with rasterio.open(scl_20_band) as scl_20_raster:
-                scl_20_band_data = scl_20_raster.read(1)  # Read the cloud mask from scl_20_band
+                scl_20_band_data = scl_20_raster.read(1)
 
             with rasterio.open(band) as first_raster:
                 profile = first_raster.profile
                 modified_layers = []
 
                 if scl_10_band.shape == first_raster.shape:
-                    mask_band = scl_10_band  # Use the high-resolution mask (10980, 10980)
+                    mask_band = scl_10_band
                 else:
                     if scl_20_band_data.shape == first_raster.shape:
-                        mask_band = scl_20_band_data  # Use the lower-resolution mask (5490, 5490)
+                        mask_band = scl_20_band_data
                     else:
                         mask_band = second_raster.read(
                             1,
                             out_shape=(first_raster.height, first_raster.width),
-                            resampling=Resampling.nearest,  # Resampling method (nearest neighbor in this case)
+                            resampling=Resampling.nearest,
                         )
 
-                for i in range(1, first_raster.count + 1):
-                    first_band = first_raster.read(i)
+                for index in range(1, first_raster.count + 1):
+                    first_band = first_raster.read(index)
 
                     first_band = np.where(np.isin(mask_band, values_to_check), 0, first_band)
                     first_band[first_band == 1] = 0
@@ -166,7 +247,7 @@ class Merge:
 
                 profile.update(dtype=rasterio.uint16)
 
-                with rasterio.open(output_path, "w", **profile) as dst:
+                with rasterio.open(output_path, FileMode.WRITE, **profile) as dst:
                     for idx, layer in enumerate(modified_layers, 1):
                         dst.write(layer, idx)
 
@@ -191,7 +272,7 @@ class Merge:
                 find_xml, *_ = [
                     filename
                     for filename in os.listdir(tile_folder)
-                    if filename.startswith("MTD") and filename.endswith(".xml")
+                    if filename.startswith(FileType.MTD) and filename.endswith(FileType.XML)
                 ]
                 xml_path: str = os.path.join(tile_folder, find_xml)
                 return xml_path
