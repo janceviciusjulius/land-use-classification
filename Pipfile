@@ -20,6 +20,7 @@ selenium = "*"
 bs4 = "*"
 rasterio = "*"
 lxml = "*"
+pydantic = "*"
 
 [dev-packages]
 black = "*"

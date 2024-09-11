@@ -1,8 +1,12 @@
 from tkinter import *
 
+from osgeo import gdal
+
 from domain.download import Downloader
 from domain.merge import Merge
 from domain.shared import Shared
+
+gdal.UseExceptions()
 
 
 def download_algorithm():

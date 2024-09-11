@@ -18,33 +18,13 @@ from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderType
 from schema.metadata_types import CloudCoverageJson, Metadata, ParametersJson
-
-gdal.UseExceptions()
+from schema.tile_types import TileType
 
 
 class Merge:
     GDAL_MERGE: str = "gdal_merge.py"
     XML_PARSER: str = "lxml-xml"
     XML_OFFSET: str = "BOA_ADD_OFFSET"
-    LITHUANIA_TILES: List[str] = [
-        "T34UDG",
-        "T34VDH",
-        "T34VEH",
-        "T34UEG",
-        "T34VFH",
-        "T34UFG",
-        "T34UFF",
-        "T34UFE",
-        "T34UGE",
-        "T34UEF",
-        "T35VLC",
-        "T35ULB",
-        "T35ULA",
-        "T35ULV",
-        "T35VMC",
-        "T35UMB",
-        "T35UMA",
-    ]
     BAND_NAMES: Dict[int, str] = {
         1: "Band_4",
         2: "Band_3",
@@ -86,18 +66,64 @@ class Merge:
         self._set_band_names()
         self._cleaning_data()
         self.shared.update_information(
-            folder=self.folders[FolderType.CLEANED], json_file_path=self.files[Metadata.CLOUD_COVERAGE]
+            folder=self.folders[FolderType.CLEANED],
+            json_file_path=self.files[Metadata.CLOUD_COVERAGE],
         )
+        self._cloud_interpolation()
 
-        # self._cloud_interpolation()
+    def _cloud_interpolation(self) -> None:
+        if self.interpolation:
+            cloud_data_path: str = self.files[Metadata.CLOUD_COVERAGE]
+            images_data: Dict[str, Dict[str, Any]] = self.shared.read_json(path=cloud_data_path)
 
-    # def _cloud_interpolation(self) -> None:
-    #     if self.interpolation:
-    #         cloud_data_path: str = self.files[Metadata.CLOUD_COVERAGE]
-    #         cloud_data: Dict[str, Dict[str, Any]] = self.shared.read_json(path=cloud_data_path)
-    #
-    #
-    #     return
+            match_images: Dict[TileType, List[Dict[str, Any]]] = self.match_images_with_tiles(images_data=images_data)
+            sorted_data: Dict[TileType, List[Dict[str, Any]]] = self.sort_image_info(
+                criteria=CloudCoverageJson.CLOUD, match_images=match_images
+            )
+
+            # {'T34UDG': [{'title': 'S2A_MSIL2A_20240901T100031_N0511_R122_T34UDG_20240901T152250.SAFE', 'cloud': 0.0,
+            #              'date': '20240901', 'tile': 'T34UDG',
+            #              'filename': '/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/
+            #              2024-09-01..2024-09-11 0-0%/CLEANED 2024-09-01..2024-09-11 0-0%/7. 20240901 T34UDG 0.0%.tiff'}],
+
+            for image_details in sorted_data.values():
+                if len(image_details) > 1:
+                    for index, details in enumerate(image_details[1:]):
+                        best_raster: Optional[Dataset] = gdal.Open(image_details[0][CloudCoverageJson.FILENAME], 1)
+                        best_raster_array = best_raster.ReadAsArray().astype("int16")
+                        mask = best_raster_array == 0
+                        if mask.all():
+                            break
+                        interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
+                        interpolation_raster_array = interpolation_raster.ReadAsArray().astype("int16")
+
+                        best_raster_array[mask] = interpolation_raster_array[mask]
+                        best_raster.WriteArray(best_raster_array)
+
+                        best_raster, best_raster_array = None, None
+                        interpolation_raster, interpolation_raster_array = None, None
+                else:
+                    pass
+
+        else:
+            logger.info(f"Cloud interpolation is skipped.")
+        return
+
+    @staticmethod
+    def sort_image_info(
+        criteria: Any, match_images: Dict[TileType, List[Dict[str, Any]]]
+    ) -> Dict[TileType, List[Dict[str, Any]]]:
+        return {tile: sorted(entries, key=lambda x: x[criteria]) for tile, entries in match_images.items()}
+
+    @staticmethod
+    def match_images_with_tiles(images_data: Dict[str, Dict[str, Any]]) -> Dict[TileType, List[Dict[str, Any]]]:
+        match_images: Dict[TileType, List[Dict[str, Any]]] = {tile_type.value: [] for tile_type in TileType}
+        for tile in TileType:
+            for image_data in images_data.values():
+                tile_code: str = image_data[CloudCoverageJson.TILE]
+                if tile_code == tile.value:
+                    match_images[TileType(tile)].append(image_data)
+        return match_images
 
     def _cleaning_data(self):
         logger.info(f"Start of images cleaning processing ...")
@@ -182,8 +208,17 @@ class Merge:
                 )
                 processed_bands.append(output_path)
 
-            parameters: List[str] = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
-            veg_index_bands: List[str] = [processed_bands[0], processed_bands[0], processed_bands[0]]
+            parameters: List[str] = [
+                self.GDAL_MERGE,
+                "-n",
+                "0",
+                "-a_nodata",
+                "0",
+                "-separate",
+                "-o",
+                out_filename,
+            ]
+            veg_index_bands: List[str] = [processed_bands[0]] * 3
 
             merge_command.extend(parameters)
             merge_command.extend(processed_bands)

@@ -178,6 +178,9 @@ class Shared:
     #
     #     return data
 
+    def validate_json(self, json_data: Dict[Any, Any]):
+        pass
+
     def to_dict(self, cls_obj: Any) -> Dict[str, Any]:
         dict_: [Any, Any] = cls_obj.__dict__.copy()
         dict_.pop("shared", None)

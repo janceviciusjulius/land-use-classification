@@ -118,7 +118,7 @@ class Downloader:
         for i in range(len(files)):
             temp_band_folder: str = os.path.join(destination, files[i])
             os.mkdir(temp_band_folder)
-            # XML part
+
             dir_path: str = os.path.join(source, files[i])
             dir_files: List[str] = os.listdir(dir_path)
             for dir_file in dir_files:
@@ -160,7 +160,6 @@ class Downloader:
             f" files could not be downloaded."
         )
 
-    # TODO: CHANGE TO JSON and save in parent as cloud_info.json
     def save_downloaded_files_id(self, features: Dict[str, Any]) -> str:
         path: str = os.path.join(self.folders[FolderType.PARENT], self.shared.INFORMATION_FILENAME)
         data: Dict[str, Any] = {}
