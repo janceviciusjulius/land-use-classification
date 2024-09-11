@@ -31,6 +31,7 @@ class CloudCoverageJson(str, Enum):
     TITLE = "title"
     CLOUD = "cloud"
     DATE = "date"
+    INTERVAL = "interval"
     TILE = "tile"
     FILENAME = "filename"
 

@@ -17,7 +17,7 @@ from schema.band_types import AddBandType, BandType
 from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderType
-from schema.metadata_types import CloudCoverageJson, Metadata, ParametersJson
+from schema.metadata_types import CloudCoverageJson, Metadata
 from schema.tile_types import TileType
 
 
@@ -70,6 +70,10 @@ class Merge:
             json_file_path=self.files[Metadata.CLOUD_COVERAGE],
         )
         self._cloud_interpolation()
+        self._count_indexes()
+    # TODO: FINISH
+    def _count_indexes(self):
+        pass
 
     def _cloud_interpolation(self) -> None:
         if self.interpolation:
@@ -80,11 +84,6 @@ class Merge:
             sorted_data: Dict[TileType, List[Dict[str, Any]]] = self.sort_image_info(
                 criteria=CloudCoverageJson.CLOUD, match_images=match_images
             )
-
-            # {'T34UDG': [{'title': 'S2A_MSIL2A_20240901T100031_N0511_R122_T34UDG_20240901T152250.SAFE', 'cloud': 0.0,
-            #              'date': '20240901', 'tile': 'T34UDG',
-            #              'filename': '/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/
-            #              2024-09-01..2024-09-11 0-0%/CLEANED 2024-09-01..2024-09-11 0-0%/7. 20240901 T34UDG 0.0%.tiff'}],
 
             for image_details in sorted_data.values():
                 if len(image_details) > 1:
@@ -102,12 +101,21 @@ class Merge:
 
                         best_raster, best_raster_array = None, None
                         interpolation_raster, interpolation_raster_array = None, None
-                else:
-                    pass
-
+                self._rename_interpolated_filename(
+                    filename=image_details[0][CloudCoverageJson.FILENAME],
+                    tile=image_details[0][CloudCoverageJson.TILE],
+                    interval=image_details[0][CloudCoverageJson.INTERVAL],
+                )
+            logger.info("Cloud interpolation process completed successfully.")
         else:
             logger.info(f"Cloud interpolation is skipped.")
         return
+
+    @staticmethod
+    def _rename_interpolated_filename(filename: str, tile: str, interval: str) -> None:
+        new_filename: str = f"{interval} {tile}{FileType.TIFF.value}"
+        new_filename_path = os.path.join(os.path.dirname(filename), new_filename)
+        os.rename(filename, new_filename_path)
 
     @staticmethod
     def sort_image_info(
@@ -273,7 +281,8 @@ class Merge:
             ),
         )
 
-    def _remove_clouds(self, scl_10_band: str, scl_20_band: str, band: str, output_path: str):
+    @staticmethod
+    def _remove_clouds(scl_10_band: str, scl_20_band: str, band: str, output_path: str):
         values_to_check: List[int] = [1, 3, 8, 9, 10, 11]
 
         with rasterio.open(scl_10_band) as second_raster:

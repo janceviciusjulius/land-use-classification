@@ -165,10 +165,12 @@ class Downloader:
         data: Dict[str, Any] = {}
         for feature in features:
             title: str = features[feature]["Title"]
+            interval: str = f"{self.start_date}..{self.end_date}"
             data[title] = {
                 CloudCoverageJson.TITLE: features[feature]["Title"],
                 CloudCoverageJson.CLOUD: features[feature]["CloudCover"],
                 CloudCoverageJson.DATE: features[feature]["Date"],
+                CloudCoverageJson.INTERVAL: interval,
                 CloudCoverageJson.TILE: title.split("_")[5],
             }
         self.shared.dumb_to_json(path=path, data=data)
@@ -194,7 +196,7 @@ class Downloader:
                 geo_j = sim_geo.to_json()
                 geo_j: GeoJson = GeoJson(data=geo_j, style_function=lambda x: {"fillColor": "orange"})
                 geo_j.add_to(m)
-            img_data = m._to_png(3)
+            img_data = m._to_png(1)
             img: Image = Image.open(BytesIO(img_data))
             img.save(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
             img.show(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
