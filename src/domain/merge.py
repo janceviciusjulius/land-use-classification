@@ -1,23 +1,23 @@
 import os
 import subprocess
-from typing import Optional, Dict, List, Union, Tuple, Any
-
-from bs4 import BeautifulSoup
-from loguru import logger
 from os import listdir
-from osgeo import gdal
-from osgeo.gdal import Band, Dataset
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 import numpy as np
 import rasterio
+from bs4 import BeautifulSoup
+from loguru import logger
+from osgeo import gdal
+from osgeo.gdal import Band, Dataset
 from rasterio.enums import Resampling
 
 from domain.shared import Shared
 from exceptions.exceptions import InvalidParameterException
-from schema.band_types import BandType, AddBandType
+from schema.band_types import AddBandType, BandType
 from schema.file_modes import FileMode
-from schema.folder_types import FolderType
 from schema.file_types import FileType
-from schema.metadata_types import Metadata, ParametersJson, CloudCoverageJson
+from schema.folder_types import FolderType
+from schema.metadata_types import CloudCoverageJson, Metadata, ParametersJson
 
 gdal.UseExceptions()
 
@@ -85,7 +85,6 @@ class Merge:
         self._merge()
         self._set_band_names()
         self._cleaning_data()
-        # TODO: CHECK WORKING
         self.shared.update_information(
             folder=self.folders[FolderType.CLEANED], json_file_path=self.files[Metadata.CLOUD_COVERAGE]
         )

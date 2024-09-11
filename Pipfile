@@ -27,6 +27,7 @@ isort = "*"
 mypy = "*"
 types-requests = "*"
 flake8 = "*"
+autoflake = "*"
 
 [requires]
 python_version = "3.11"

@@ -9,7 +9,6 @@ def download_algorithm():
     shared: Shared = Shared()
     downloader: Downloader = Downloader(shared=shared)
     downloader.download_data()
-    print("DAS", downloader.files)
     merge: Merge = Merge(
         shared=shared,
         interpolation=downloader.interpolation,

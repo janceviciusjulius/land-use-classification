@@ -4,12 +4,13 @@ from enum import Enum
 from json import dump, load
 from os.path import isdir
 from shutil import rmtree
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 from zipfile import BadZipfile, ZipFile
 
 from loguru import logger
 
 from schema.file_modes import FileMode
+from schema.file_types import FileType
 from schema.folder_types import FolderPrefix, FolderType
 from schema.metadata_types import CloudCoverageJson
 from schema.parameters import Parameters
@@ -202,12 +203,11 @@ class Shared:
             cloud: str = str(file_details[CloudCoverageJson.CLOUD])
 
             match_file_name: str = self._match_file_with_criteria(folder=folder, date=date, tile=tile, cloud=cloud)
-            file_details[CloudCoverageJson.FILENAME] = match_file_name
-
+            file_details[CloudCoverageJson.FILENAME.value] = match_file_name
         self.dumb_to_json(data=data, path=json_file_path)
 
     @staticmethod
-    def _match_file_with_criteria(folder: str, date: str, tile: str, cloud: str) -> str:
+    def _match_file_with_criteria(folder: str, date: str, tile: str, cloud: str) -> Optional[str]:
         files_in_folder: List[str] = os.listdir(folder)
         for file in files_in_folder:
             if date in file and tile in file and str(cloud) in file:
@@ -216,7 +216,9 @@ class Shared:
 
     @staticmethod
     def delete_all_xml(dir_name):
-        delete_xml = [band for band in os.listdir(dir_name) if band.endswith("xml") and not band.startswith("MTD")]
+        delete_xml = [
+            band for band in os.listdir(dir_name) if band.endswith(FileType.XML) and not band.startswith(FileType.MTD)
+        ]
         for xml in delete_xml:
             os.remove(os.path.join(dir_name, xml))
 
