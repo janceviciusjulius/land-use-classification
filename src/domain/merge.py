@@ -86,6 +86,8 @@ class Merge:
             )
 
             for image_details in sorted_data.values():
+                if len(image_details) == 0:
+                    continue
                 if len(image_details) > 1:
                     for index, details in enumerate(image_details[1:]):
                         best_raster: Optional[Dataset] = gdal.Open(image_details[0][CloudCoverageJson.FILENAME], 1)
@@ -101,6 +103,7 @@ class Merge:
 
                         best_raster, best_raster_array = None, None
                         interpolation_raster, interpolation_raster_array = None, None
+                # TODO: FIX IMAGE_DEATAILS[0]
                 self._rename_interpolated_filename(
                     filename=image_details[0][CloudCoverageJson.FILENAME],
                     tile=image_details[0][CloudCoverageJson.TILE],
