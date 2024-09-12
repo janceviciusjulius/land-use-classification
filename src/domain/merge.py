@@ -67,6 +67,7 @@ class Merge:
         self._cleaning_data()
         self._cloud_interpolation()
         self._count_indexes()
+        self.shared.delete_folder(self.folders[FolderType.MERGED])
 
     def _count_indexes(self):
         logger.info("Starting index counting process.")
