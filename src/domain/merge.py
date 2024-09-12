@@ -3,7 +3,7 @@ import subprocess
 from os import listdir
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import numpy as np
+from numpy import ndarray, seterr, nan_to_num, around, where, isin
 import rasterio
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -70,39 +70,39 @@ class Merge:
 
     def _count_indexes(self):
         logger.info("Starting index counting process.")
-        files: List[str] = os.listdir(self.folders[FolderType.CLOUD])
+        files: List[str] = os.listdir(self.folders[FolderType.CLEANED])
         for index, file in enumerate(files):
-            raster: Optional[Dataset] = gdal.Open(os.path.join(self.folders[FolderType.CLOUD], file), 1)
-            band3: Optional[np.ndarray] = raster.GetRasterBand(2).ReadAsArray()
-            band4: Optional[np.ndarray] = raster.GetRasterBand(1).ReadAsArray()
-            band5: Optional[np.ndarray] = raster.GetRasterBand(4).ReadAsArray()
-            band11: Optional[np.ndarray] = raster.GetRasterBand(9).ReadAsArray()
-            band12: Optional[np.ndarray] = raster.GetRasterBand(10).ReadAsArray()
+            raster: Optional[Dataset] = gdal.Open(os.path.join(self.folders[FolderType.CLEANED], file), 1)
+            band3: Optional[ndarray] = raster.GetRasterBand(2).ReadAsArray()
+            band4: Optional[ndarray] = raster.GetRasterBand(1).ReadAsArray()
+            band5: Optional[ndarray] = raster.GetRasterBand(4).ReadAsArray()
+            band11: Optional[ndarray] = raster.GetRasterBand(9).ReadAsArray()
+            band12: Optional[ndarray] = raster.GetRasterBand(10).ReadAsArray()
 
             write_NDTI: Band = raster.GetRasterBand(11)
             write_NDVIre: Band = raster.GetRasterBand(12)
             write_MNDWI: Band = raster.GetRasterBand(13)
-            np.seterr(invalid="ignore")
+            seterr(invalid="ignore")
 
-            NDTI: Optional[np.ndarray] = (band11 - band12) / (band11 + band12)
-            NDTI: Optional[np.ndarray] = np.nan_to_num(NDTI)
-            NDTI: Optional[np.ndarray] = np.around(NDTI, decimals=4)
-            NDTI: Optional[np.ndarray] = NDTI * 10000
-            NDTI: Optional[np.ndarray] = NDTI.astype("int16")
+            NDTI: Optional[ndarray] = (band11 - band12) / (band11 + band12)
+            NDTI: Optional[ndarray] = nan_to_num(NDTI)
+            NDTI: Optional[ndarray] = around(NDTI, decimals=4)
+            NDTI: Optional[ndarray] = NDTI * 10000
+            NDTI: Optional[ndarray] = NDTI.astype("int16")
             write_NDTI.WriteArray(NDTI)
 
-            NDVIre: Optional[np.ndarray] = (band5 - band4) / (band5 + band4)
-            NDVIre: Optional[np.ndarray] = np.nan_to_num(NDVIre)
-            NDVIre: Optional[np.ndarray] = np.around(NDVIre, decimals=4)
-            NDVIre: Optional[np.ndarray] = NDVIre * 10000
-            NDVIre: Optional[np.ndarray] = NDVIre.astype("int16")
+            NDVIre: Optional[ndarray] = (band5 - band4) / (band5 + band4)
+            NDVIre: Optional[ndarray] = nan_to_num(NDVIre)
+            NDVIre: Optional[ndarray] = around(NDVIre, decimals=4)
+            NDVIre: Optional[ndarray] = NDVIre * 10000
+            NDVIre: Optional[ndarray] = NDVIre.astype("int16")
             write_NDVIre.WriteArray(NDVIre)
 
-            MNDWI: Optional[np.ndarray] = (band3 - band11) / (band3 + band11)
-            MNDWI: Optional[np.ndarray] = np.nan_to_num(MNDWI)
-            MNDWI: Optional[np.ndarray] = np.around(MNDWI, decimals=4)
-            MNDWI: Optional[np.ndarray] = MNDWI * 10000
-            MNDWI: Optional[np.ndarray] = MNDWI.astype("int16")
+            MNDWI: Optional[ndarray] = (band3 - band11) / (band3 + band11)
+            MNDWI: Optional[ndarray] = nan_to_num(MNDWI)
+            MNDWI: Optional[ndarray] = around(MNDWI, decimals=4)
+            MNDWI: Optional[ndarray] = MNDWI * 10000
+            MNDWI: Optional[ndarray] = MNDWI.astype("int16")
             write_MNDWI.WriteArray(MNDWI)
 
             raster, band3, band4, band5, band11, band12 = None, None, None, None, None, None
@@ -129,7 +129,7 @@ class Merge:
                             if mask.all():
                                 break
                             interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
-                            interpolation_raster_array: Optional[np.ndarray] = interpolation_raster.ReadAsArray().astype("int16")
+                            interpolation_raster_array: Optional[ndarray] = interpolation_raster.ReadAsArray().astype("int16")
 
                             best_raster_array[mask] = interpolation_raster_array[mask]
                             best_raster.WriteArray(best_raster_array)
@@ -283,8 +283,8 @@ class Merge:
             if all(offset_values) and len(offset_values) > 0:
                 offset_value: int = int(offset_values[0])
                 raster: Optional[Dataset] = gdal.Open(out_filename, 1)
-                raster_array: Optional[np.ndarray] = raster.ReadAsArray()
-                raster_array: Optional[np.ndarray] = raster_array + offset_value
+                raster_array: Optional[ndarray] = raster.ReadAsArray()
+                raster_array: Optional[ndarray] = raster_array + offset_value
                 raster_array[raster_array < 0] = 0
                 raster.WriteArray(raster_array)
                 logger.info(f"Successfully changed {index+1} file pixel values.")
@@ -349,7 +349,7 @@ class Merge:
                 for index in range(1, first_raster.count + 1):
                     first_band = first_raster.read(index)
 
-                    first_band = np.where(np.isin(mask_band, values_to_check), 0, first_band)
+                    first_band = where(isin(mask_band, values_to_check), 0, first_band)
                     first_band[first_band == 1] = 0
 
                     # Convert to a supported data type (e.g., uint16)
