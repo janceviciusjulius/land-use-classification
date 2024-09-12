@@ -71,6 +71,7 @@ class Merge:
         )
         self._cloud_interpolation()
         self._count_indexes()
+
     # TODO: FINISH
     def _count_indexes(self):
         pass
@@ -86,29 +87,27 @@ class Merge:
             )
 
             for image_details in sorted_data.values():
-                if len(image_details) == 0:
-                    continue
-                if len(image_details) > 1:
-                    for index, details in enumerate(image_details[1:]):
-                        best_raster: Optional[Dataset] = gdal.Open(image_details[0][CloudCoverageJson.FILENAME], 1)
-                        best_raster_array = best_raster.ReadAsArray().astype("int16")
-                        mask = best_raster_array == 0
-                        if mask.all():
-                            break
-                        interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
-                        interpolation_raster_array = interpolation_raster.ReadAsArray().astype("int16")
+                if len(image_details) > 0:
+                    if len(image_details) > 1:
+                        for index, details in enumerate(image_details[1:]):
+                            best_raster: Optional[Dataset] = gdal.Open(image_details[0][CloudCoverageJson.FILENAME], 1)
+                            best_raster_array = best_raster.ReadAsArray().astype("int16")
+                            mask = best_raster_array == 0
+                            if mask.all():
+                                break
+                            interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
+                            interpolation_raster_array = interpolation_raster.ReadAsArray().astype("int16")
 
-                        best_raster_array[mask] = interpolation_raster_array[mask]
-                        best_raster.WriteArray(best_raster_array)
+                            best_raster_array[mask] = interpolation_raster_array[mask]
+                            best_raster.WriteArray(best_raster_array)
 
-                        best_raster, best_raster_array = None, None
-                        interpolation_raster, interpolation_raster_array = None, None
-                # TODO: FIX IMAGE_DEATAILS[0]
-                self._rename_interpolated_filename(
-                    filename=image_details[0][CloudCoverageJson.FILENAME],
-                    tile=image_details[0][CloudCoverageJson.TILE],
-                    interval=image_details[0][CloudCoverageJson.INTERVAL],
-                )
+                            best_raster, best_raster_array = None, None
+                            interpolation_raster, interpolation_raster_array = None, None
+                    self._rename_interpolated_filename(
+                        filename=image_details[0][CloudCoverageJson.FILENAME],
+                        tile=image_details[0][CloudCoverageJson.TILE],
+                        interval=image_details[0][CloudCoverageJson.INTERVAL],
+                    )
             logger.info("Cloud interpolation process completed successfully.")
         else:
             logger.info(f"Cloud interpolation is skipped.")
@@ -118,6 +117,7 @@ class Merge:
     def _rename_interpolated_filename(filename: str, tile: str, interval: str) -> None:
         new_filename: str = f"{interval} {tile}{FileType.TIFF.value}"
         new_filename_path = os.path.join(os.path.dirname(filename), new_filename)
+        print(f"NEW: {new_filename}, OLD: {filename}")
         os.rename(filename, new_filename_path)
 
     @staticmethod
