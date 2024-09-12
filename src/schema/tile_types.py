@@ -19,3 +19,4 @@ class TileType(str, Enum):
     T35VMC = "T35VMC"
     T35UMB = "T35UMB"
     T35UMA = "T35UMA"
+    T35UMV = "T35UMV"

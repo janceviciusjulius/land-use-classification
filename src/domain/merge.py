@@ -65,16 +65,49 @@ class Merge:
         self._merge()
         self._set_band_names()
         self._cleaning_data()
-        self.shared.update_information(
-            folder=self.folders[FolderType.CLEANED],
-            json_file_path=self.files[Metadata.CLOUD_COVERAGE],
-        )
         self._cloud_interpolation()
         self._count_indexes()
 
-    # TODO: FINISH
     def _count_indexes(self):
-        pass
+        logger.info("Starting index counting process.")
+        files: List[str] = os.listdir(self.folders[FolderType.CLOUD])
+        for index, file in enumerate(files):
+            raster: Optional[Dataset] = gdal.Open(os.path.join(self.folders[FolderType.CLOUD], file), 1)
+            band3: Optional[np.ndarray] = raster.GetRasterBand(2).ReadAsArray()
+            band4: Optional[np.ndarray] = raster.GetRasterBand(1).ReadAsArray()
+            band5: Optional[np.ndarray] = raster.GetRasterBand(4).ReadAsArray()
+            band11: Optional[np.ndarray] = raster.GetRasterBand(9).ReadAsArray()
+            band12: Optional[np.ndarray] = raster.GetRasterBand(10).ReadAsArray()
+
+            write_NDTI: Band = raster.GetRasterBand(11)
+            write_NDVIre: Band = raster.GetRasterBand(12)
+            write_MNDWI: Band = raster.GetRasterBand(13)
+            np.seterr(invalid="ignore")
+
+            NDTI: Optional[np.ndarray] = (band11 - band12) / (band11 + band12)
+            NDTI: Optional[np.ndarray] = np.nan_to_num(NDTI)
+            NDTI: Optional[np.ndarray] = np.around(NDTI, decimals=4)
+            NDTI: Optional[np.ndarray] = NDTI * 10000
+            NDTI: Optional[np.ndarray] = NDTI.astype("int16")
+            write_NDTI.WriteArray(NDTI)
+
+            NDVIre: Optional[np.ndarray] = (band5 - band4) / (band5 + band4)
+            NDVIre: Optional[np.ndarray] = np.nan_to_num(NDVIre)
+            NDVIre: Optional[np.ndarray] = np.around(NDVIre, decimals=4)
+            NDVIre: Optional[np.ndarray] = NDVIre * 10000
+            NDVIre: Optional[np.ndarray] = NDVIre.astype("int16")
+            write_NDVIre.WriteArray(NDVIre)
+
+            MNDWI: Optional[np.ndarray] = (band3 - band11) / (band3 + band11)
+            MNDWI: Optional[np.ndarray] = np.nan_to_num(MNDWI)
+            MNDWI: Optional[np.ndarray] = np.around(MNDWI, decimals=4)
+            MNDWI: Optional[np.ndarray] = MNDWI * 10000
+            MNDWI: Optional[np.ndarray] = MNDWI.astype("int16")
+            write_MNDWI.WriteArray(MNDWI)
+
+            raster, band3, band4, band5, band11, band12 = None, None, None, None, None, None
+            logger.info(f"Successfully counted indexes for {index + 1} file")
+        logger.info("End of index counting process")
 
     def _cloud_interpolation(self) -> None:
         if self.interpolation:
@@ -91,12 +124,12 @@ class Merge:
                     if len(image_details) > 1:
                         for index, details in enumerate(image_details[1:]):
                             best_raster: Optional[Dataset] = gdal.Open(image_details[0][CloudCoverageJson.FILENAME], 1)
-                            best_raster_array = best_raster.ReadAsArray().astype("int16")
+                            best_raster_array: Any = best_raster.ReadAsArray().astype("int16")
                             mask = best_raster_array == 0
                             if mask.all():
                                 break
                             interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
-                            interpolation_raster_array = interpolation_raster.ReadAsArray().astype("int16")
+                            interpolation_raster_array: Optional[np.ndarray] = interpolation_raster.ReadAsArray().astype("int16")
 
                             best_raster_array[mask] = interpolation_raster_array[mask]
                             best_raster.WriteArray(best_raster_array)
@@ -117,7 +150,6 @@ class Merge:
     def _rename_interpolated_filename(filename: str, tile: str, interval: str) -> None:
         new_filename: str = f"{interval} {tile}{FileType.TIFF.value}"
         new_filename_path = os.path.join(os.path.dirname(filename), new_filename)
-        print(f"NEW: {new_filename}, OLD: {filename}")
         os.rename(filename, new_filename_path)
 
     @staticmethod
@@ -146,6 +178,10 @@ class Merge:
             self._clean_warp(input_file_path=input_file_path, output_file_path=output_file_path)
             logger.info(f"Processed {index + 1} file")
         logger.info(f"End of images cleaning processing.")
+        self.shared.update_information(
+            folder=self.folders[FolderType.CLEANED],
+            json_file_path=self.files[Metadata.CLOUD_COVERAGE],
+        )
 
     def _set_band_names(self):
         files: List[str] = os.listdir(self.folders[FolderType.MERGED])
