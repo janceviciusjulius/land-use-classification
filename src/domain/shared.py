@@ -98,7 +98,7 @@ class Shared:
     def choose_shp_from_folder(self) -> str:
         logger.info("Please choose .shp file for cropping...")
         filetypes: Tuple[Tuple[str, str], ...] = (("ESRI Shapefile", "*.shp"), ("GeoPackage", "*.gpkg"))
-        shp_path, *_ = filedialog.askopenfilename(
+        shp_path: str = filedialog.askopenfilename(
             initialdir=self.root_folders[RootFolders.SHP_FOLDER], filetypes=filetypes
         )
         return shp_path

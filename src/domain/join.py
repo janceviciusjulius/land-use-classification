@@ -18,7 +18,7 @@ class Join:
         self.shape_file: Optional[str] = self._choose_shp_file()
 
     def join(self):
-        pass
+        print(self.shape_file)
 
     def _choose_shp_file(self) -> Optional[str]:
         if self.cropping_choice != CroppingChoice.NONE:
