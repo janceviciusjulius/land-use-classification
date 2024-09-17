@@ -130,7 +130,9 @@ class Merge:
                             if mask.all():
                                 break
                             interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
-                            interpolation_raster_array: Optional[ndarray] = interpolation_raster.ReadAsArray().astype("int16")
+                            interpolation_raster_array: Optional[ndarray] = interpolation_raster.ReadAsArray().astype(
+                                "int16"
+                            )
 
                             best_raster_array[mask] = interpolation_raster_array[mask]
                             best_raster.WriteArray(best_raster_array)

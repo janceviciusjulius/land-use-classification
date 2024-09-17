@@ -3,6 +3,7 @@ from tkinter import *
 from osgeo import gdal
 
 from domain.download import Downloader
+from domain.join import Join
 from domain.merge import Merge
 from domain.shared import Shared
 
@@ -25,6 +26,13 @@ def download_algorithm():
     merge.process_data()
 
 
+def join_algorithm():
+    shared: Shared = Shared()
+    join: Join = Join(shared=shared)
+
+    join.join()
+
+
 def main_page():
     window = Tk()
     window.title("System")
@@ -38,8 +46,17 @@ def main_page():
     )
     btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky="ew")
 
+    btn2 = Button(
+        window,
+        text="Join/Crop",
+        command=lambda: join_algorithm(),
+    )
+
+    btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky="ew")
+    btn2.grid(row=4, columnspan=2, padx=5, pady=5, sticky="ew")
+
     close_btn = Button(window, text="Close program", command=window.destroy)
-    close_btn.grid(row=4, columnspan=2, padx=10, pady=10)
+    close_btn.grid(row=6, columnspan=2, padx=10, pady=10)
 
     window.mainloop()
 

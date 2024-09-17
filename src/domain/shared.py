@@ -1,18 +1,20 @@
 import os
 import sys
+import warnings
 from enum import Enum
 from json import dump, load
 from os.path import isdir
 from shutil import rmtree
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 from zipfile import BadZipfile, ZipFile
+from tkinter import filedialog
 
 from loguru import logger
 
 from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderPrefix, FolderType
-from schema.metadata_types import CloudCoverageJson
+from schema.metadata_types import CloudCoverageJson, ParametersJson
 from schema.parameters import Parameters
 from schema.root_folders import RootFolders
 from schema.yes_no import YesNo
@@ -62,10 +64,10 @@ class Shared:
 
     @staticmethod
     def generate_folder_name(
-        start_date: str,
-        end_date: str,
-        max_cloud_cover: int,
-        folder_type: Optional[FolderPrefix] = None,
+            start_date: str,
+            end_date: str,
+            max_cloud_cover: int,
+            folder_type: Optional[FolderPrefix] = None,
     ) -> str:
         name = start_date + ".." + end_date + " " + "0" + "-" + str(max_cloud_cover) + "%"
         if not folder_type:
@@ -85,6 +87,43 @@ class Shared:
         src_root: str = os.path.abspath(os.path.join(current_dir, os.pardir))
         parent: str = os.path.dirname(src_root)
         return parent
+
+    def choose_files_from_folder(self) -> List[str]:
+        self.clear_console()
+        logger.info(f"Data joining/cropping algorithm")
+        logger.info("Please choose file/files which You want to join/crop")
+        files_paths = list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
+        return files_paths
+
+    @staticmethod
+    def convert_key_to_enum(key: str, enum_class: type(Enum)) -> Union[str, type(Enum)]:
+        try:
+            return enum_class(key)
+        except ValueError:
+            return key
+
+    def get_parameters(self, files_paths: List[str]) -> Dict[Any, Any]:
+        file_path, *_ = files_paths
+        json_file_path: str = os.path.join(os.path.dirname(os.path.dirname(file_path)), self.PARAMETERS_FILENAME)
+        data: Dict[str, Any] = self.read_json(json_file_path)
+        del data[ParametersJson.FILES]
+        return self._convert_json_to_enum(data=data, param_enum=ParametersJson, folder_enum=FolderType)
+
+    def _convert_json_to_enum(self, data, param_enum, folder_enum):
+        result = {}
+        for key, value in data.items():
+            new_key = self.convert_key_to_enum(key, param_enum)
+            if isinstance(value, dict):
+                if new_key == param_enum.FOLDERS:
+                    value = self._convert_json_to_enum(value, folder_enum, folder_enum)
+                else:
+                    value = self._convert_json_to_enum(value, param_enum, folder_enum)
+            result[new_key] = value
+        return result
+
+    # @staticmethod
+    # def _convert_keys_to_enum(data: Dict[str, Any], enum_class: type(Enum)) -> Dict[type(Enum), str]:
+    #     return {enum_class[key]: value for key, value in data.items() if key in enum_class.__members__}
 
     def ask_deletion(self, folders: Dict[FolderType, str], scenario: FolderType) -> None:
         deletion_scenarios: Dict[FolderType, List[FolderType]] = {
@@ -167,16 +206,6 @@ class Shared:
             }
         else:
             return dict_
-
-    # TODO: ADD READING JSON SUPPORT
-    # @staticmethod
-    # def _load_json_with_enum(json_str: str, enum_type: Enum) -> Dict[str, Any]:
-    #     data = loads(json_str)
-    #
-    #     if 'folders' in data:
-    #         data['folders'] = {enum_type[key]: value for key, value in data['folders'].items()}
-    #
-    #     return data
 
     def validate_json(self, json_data: Dict[Any, Any]):
         pass
