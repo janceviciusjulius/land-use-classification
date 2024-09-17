@@ -64,10 +64,10 @@ class Shared:
 
     @staticmethod
     def generate_folder_name(
-            start_date: str,
-            end_date: str,
-            max_cloud_cover: int,
-            folder_type: Optional[FolderPrefix] = None,
+        start_date: str,
+        end_date: str,
+        max_cloud_cover: int,
+        folder_type: Optional[FolderPrefix] = None,
     ) -> str:
         name = start_date + ".." + end_date + " " + "0" + "-" + str(max_cloud_cover) + "%"
         if not folder_type:
@@ -95,6 +95,14 @@ class Shared:
         files_paths = list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
         return files_paths
 
+    def choose_shp_from_folder(self) -> str:
+        logger.info("Please choose .shp file for cropping...")
+        filetypes: Tuple[Tuple[str, str], ...] = (("ESRI Shapefile", "*.shp"), ("GeoPackage", "*.gpkg"))
+        shp_path, *_ = filedialog.askopenfilename(
+            initialdir=self.root_folders[RootFolders.SHP_FOLDER], filetypes=filetypes
+        )
+        return shp_path
+
     @staticmethod
     def convert_key_to_enum(key: str, enum_class: type(Enum)) -> Union[str, type(Enum)]:
         try:
@@ -120,6 +128,12 @@ class Shared:
                     value = self._convert_json_to_enum(value, param_enum, folder_enum)
             result[new_key] = value
         return result
+
+    @staticmethod
+    def display_options(options: List[str]):
+        logger.info("Select cutting layer:")
+        for i, option in enumerate(options, 1):
+            print(f"     {i}. {option}")
 
     # @staticmethod
     # def _convert_keys_to_enum(data: Dict[str, Any], enum_class: type(Enum)) -> Dict[type(Enum), str]:
