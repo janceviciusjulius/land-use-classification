@@ -15,8 +15,8 @@ from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderPrefix, FolderType
 from schema.metadata_types import CloudCoverageJson, ParametersJson
-from schema.parameters import Parameters
 from schema.root_folders import RootFolders
+from schema.shapefile_type import ShapeType
 from schema.yes_no import YesNo
 
 
@@ -267,6 +267,22 @@ class Shared:
         ]
         for xml in delete_xml:
             os.remove(os.path.join(dir_name, xml))
+
+    @staticmethod
+    def rename_file(path: str, old_prefix: str, new_prefix: str) -> str:
+        file_name: str = os.path.basename(path)
+        path_without_filename: str = os.path.dirname(path)
+        new_file_name: str = file_name.replace(old_prefix, new_prefix)
+        return os.path.join(path_without_filename, new_file_name)
+
+    @staticmethod
+    def get_shp_from_path(path: str) -> str:
+        file_name: str = os.path.basename(path)
+        if FileType.GPKG in file_name:
+            return file_name.replace("", "")
+        return file_name.replace("", "")
+
+
 
     @staticmethod
     def progress_cb(complete, message, cb_data):

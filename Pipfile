@@ -21,6 +21,7 @@ bs4 = "*"
 rasterio = "*"
 lxml = "*"
 pydantic = "*"
+opencv-python = "*"
 
 [dev-packages]
 black = "*"

@@ -14,11 +14,19 @@ class Join:
         self.files: List[str] = self.shared.choose_files_from_folder()
         self.parameters: Dict[str, Any] = self.shared.get_parameters(files_paths=self.files)
         self.folders: Dict[FolderType, str] = self.parameters[ParametersJson.FOLDERS]
-        self.cropping_choice: type(CroppingChoice) = self._ask_for_cropping_choice()
+        self.cropping_choice: CroppingChoice = self._ask_for_cropping_choice()
         self.shape_file: Optional[str] = self._choose_shp_file()
+        self.shape_file_name: Optional[str] = self.shared.get_shp_from_path(self.shape_file)
+        self.result_file_name: str = self._create_result_filename()
 
     def join(self):
-        print(self.shape_file)
+        self.shared.create_folder(path=self.folders[FolderType.JOINED])
+        self.shared.delete_all_xml(dir_name=self.folders[FolderType.CLEANED])
+
+    def _create_result_filename(self) -> str:
+        if self.cropping_choice == CroppingChoice.NONE:
+            return f"{FolderType.JOINED} {self.parameters[ParametersJson.START_DATE]}..{self.parameters[ParametersJson.END_DATE]}"
+        return f"{FolderType.JOINED} {self.shape_file_name} {self.parameters[ParametersJson.START_DATE]}..{self.parameters[ParametersJson.END_DATE]}"
 
     def _choose_shp_file(self) -> Optional[str]:
         if self.cropping_choice != CroppingChoice.NONE:
