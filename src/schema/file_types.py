@@ -7,5 +7,8 @@ class FileType(str, Enum):
     XML = ".xml"
     GPKG = ".gpkg"
     SHP = ".shp"
-    
+
     MTD = "MTD"
+
+    def __str__(self) -> str:
+        return self.value

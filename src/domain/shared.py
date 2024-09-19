@@ -1,6 +1,5 @@
 import os
 import sys
-import warnings
 from enum import Enum
 from json import dump, load
 from os.path import isdir
@@ -11,12 +10,12 @@ from tkinter import filedialog
 
 from loguru import logger
 
+from schema.constants import Constants
 from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderPrefix, FolderType
 from schema.metadata_types import CloudCoverageJson, ParametersJson
 from schema.root_folders import RootFolders
-from schema.shapefile_type import ShapeType
 from schema.yes_no import YesNo
 
 
@@ -54,7 +53,7 @@ class Shared:
         return path
 
     def create_root_folders(self) -> Dict[RootFolders, str]:
-        root_folders: Dict[RootFolders, str] = {}
+        root_folders: Dict[type(RootFolders), str] = {}
         for root_folder in RootFolders:
             path = os.path.join(self._get_project_folder(), root_folder)
             root_folders[root_folder] = path
@@ -134,10 +133,6 @@ class Shared:
         logger.info("Select cutting layer:")
         for i, option in enumerate(options, 1):
             print(f"     {i}. {option}")
-
-    # @staticmethod
-    # def _convert_keys_to_enum(data: Dict[str, Any], enum_class: type(Enum)) -> Dict[type(Enum), str]:
-    #     return {enum_class[key]: value for key, value in data.items() if key in enum_class.__members__}
 
     def ask_deletion(self, folders: Dict[FolderType, str], scenario: FolderType) -> None:
         deletion_scenarios: Dict[FolderType, List[FolderType]] = {
@@ -276,12 +271,13 @@ class Shared:
         return os.path.join(path_without_filename, new_file_name)
 
     @staticmethod
-    def get_shp_from_path(path: str) -> str:
-        file_name: str = os.path.basename(path)
-        if FileType.GPKG in file_name:
-            return file_name.replace("", "")
-        return file_name.replace("", "")
-
+    def get_shp_from_path(path: str) -> Optional[str]:
+        if path:
+            file_name: str = os.path.basename(path)
+            if FileType.GPKG in file_name:
+                return file_name.replace(FileType.GPKG, Constants.EMPTY_STRING)
+            return file_name.replace(FileType.SHP, Constants.EMPTY_STRING)
+        return None
 
 
     @staticmethod

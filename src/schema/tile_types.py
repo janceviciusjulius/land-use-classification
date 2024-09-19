@@ -20,3 +20,6 @@ class TileType(str, Enum):
     T35UMB = "T35UMB"
     T35UMA = "T35UMA"
     T35UMV = "T35UMV"
+
+    def __str__(self) -> str:
+        return self.value

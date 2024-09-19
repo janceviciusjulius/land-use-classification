@@ -5,6 +5,9 @@ class Metadata(str, Enum):
     PARAMETERS = "parameters"
     CLOUD_COVERAGE = "cloud_coverage"
 
+    def __str__(self) -> str:
+        return self.value
+
 class ParametersJson(str, Enum):
     INTERPOLATION = "interpolation"
     START_DATE = "start_date"
@@ -13,6 +16,9 @@ class ParametersJson(str, Enum):
     FOLDERS = "folders"
     FILES = "files"
 
+    def __str__(self) -> str:
+        return self.value
+
 class CloudCoverageJson(str, Enum):
     TITLE = "title"
     CLOUD = "cloud"
@@ -20,4 +26,7 @@ class CloudCoverageJson(str, Enum):
     INTERVAL = "interval"
     TILE = "tile"
     FILENAME = "filename"
+
+    def __str__(self) -> str:
+        return self.value
 

@@ -12,6 +12,9 @@ class FolderType(str, Enum):
     JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class FolderPrefix(str, Enum):
     DOWNLOAD = "SENTINEL-2"
@@ -22,3 +25,6 @@ class FolderPrefix(str, Enum):
     CLOUD = "CLOUD"
     JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
+
+    def __str__(self) -> str:
+        return self.value

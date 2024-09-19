@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Tuple
 
 
 class BandType(tuple, Enum):
@@ -13,7 +14,13 @@ class BandType(tuple, Enum):
     B11 = ("B11.jp2", "B11_20m.jp2")
     B12 = ("B12.jp2", "B12_20m.jp2")
 
+    def __str__(self) -> Tuple[str, ...]:
+        return self.value
+
 
 class AddBandType(tuple, Enum):
     SCL = ("SCL_20m.jp2",)
     XML = ("MTD", ".xml")
+
+    def __str__(self) -> Tuple[str, ...]:
+        return self.value

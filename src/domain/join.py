@@ -23,10 +23,18 @@ class Join:
         self.shared.create_folder(path=self.folders[FolderType.JOINED])
         self.shared.delete_all_xml(dir_name=self.folders[FolderType.CLEANED])
 
+        print("------------")
+        print(self.cropping_choice)
+        print(self.shape_file)
+        print(self.shape_file_name)
+        print(self.result_file_name)
+        print("------------")
+
     def _create_result_filename(self) -> str:
+        start_date, end_date = self.parameters[ParametersJson.START_DATE], self.parameters[ParametersJson.END_DATE]
         if self.cropping_choice == CroppingChoice.NONE:
-            return f"{FolderType.JOINED} {self.parameters[ParametersJson.START_DATE]}..{self.parameters[ParametersJson.END_DATE]}"
-        return f"{FolderType.JOINED} {self.shape_file_name} {self.parameters[ParametersJson.START_DATE]}..{self.parameters[ParametersJson.END_DATE]}"
+            return f"{FolderType.JOINED} {start_date}..{end_date}"
+        return f"{FolderType.JOINED} {self.shape_file_name} {start_date}..{end_date}"
 
     def _choose_shp_file(self) -> Optional[str]:
         if self.cropping_choice != CroppingChoice.NONE:
