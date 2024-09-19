@@ -166,6 +166,23 @@ class Shared:
         except (os.error, OSError, FileNotFoundError, NotADirectoryError):
             logger.error("Folder cannot be found. Skipping")
 
+    @staticmethod
+    def delete_file(path: str) -> None:
+        os.remove(path)
+
+    def check_if_file_exists(self, path: str) -> None:
+        if os.path.exists(path):
+            while True:
+                yes_or_no: str = str(input("File already exits. Do you want to continue? (Y/N) "))
+                if yes_or_no.lower() == YesNo.YES:
+                    self.delete_file(path=path)
+                    break
+                elif yes_or_no.lower() == YesNo.NO:
+                    logger.info("File left on storage")
+                    sys.exit(1)
+                else:
+                    logger.error("Error. Please specify an answer.")
+
     def check_if_data_folder_exists(self, folders: Dict[FolderType, str], scenario: FolderType) -> str:
         if isdir(folders[scenario]):
             self.ask_deletion(folders=folders, scenario=scenario)
@@ -215,9 +232,6 @@ class Shared:
             }
         else:
             return dict_
-
-    def validate_json(self, json_data: Dict[Any, Any]):
-        pass
 
     def to_dict(self, cls_obj: Any) -> Dict[str, Any]:
         dict_: [Any, Any] = cls_obj.__dict__.copy()
@@ -271,6 +285,10 @@ class Shared:
         return os.path.join(path_without_filename, new_file_name)
 
     @staticmethod
+    def add_file_ext(file_name: str, ext: FileType) -> str:
+        return file_name + ext
+
+    @staticmethod
     def get_shp_from_path(path: str) -> Optional[str]:
         if path:
             file_name: str = os.path.basename(path)
@@ -278,7 +296,6 @@ class Shared:
                 return file_name.replace(FileType.GPKG, Constants.EMPTY_STRING)
             return file_name.replace(FileType.SHP, Constants.EMPTY_STRING)
         return None
-
 
     @staticmethod
     def progress_cb(complete, message, cb_data):

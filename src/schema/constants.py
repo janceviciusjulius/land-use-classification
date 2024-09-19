@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Constants(str, Enum):
     EMPTY_STRING = ""
 

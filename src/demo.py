@@ -1,4 +1,5 @@
-import requests
+B3 = 887
+B11 = 3191
 
-response = requests.get("https://www.rightwingwatch.org/post/right-wing-round-up-140-people/")  # 301
-print(response.status_code)
+x = (B3 - B11) / (B3 + B11)
+print(x * 10000)

@@ -8,6 +8,7 @@ class Metadata(str, Enum):
     def __str__(self) -> str:
         return self.value
 
+
 class ParametersJson(str, Enum):
     INTERPOLATION = "interpolation"
     START_DATE = "start_date"
@@ -19,6 +20,7 @@ class ParametersJson(str, Enum):
     def __str__(self) -> str:
         return self.value
 
+
 class CloudCoverageJson(str, Enum):
     TITLE = "title"
     CLOUD = "cloud"
@@ -29,4 +31,3 @@ class CloudCoverageJson(str, Enum):
 
     def __str__(self) -> str:
         return self.value
-

@@ -361,7 +361,7 @@ class Merge:
 
                     modified_layers.append(first_band)
 
-                profile.update(dtype=rasterio.uint16)
+                profile.update(dtype=rasterio.int16)
 
                 with rasterio.open(output_path, FileMode.WRITE, **profile) as dst:
                     for idx, layer in enumerate(modified_layers, 1):

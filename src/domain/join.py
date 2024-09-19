@@ -1,7 +1,12 @@
+import os.path
 from typing import Dict, Optional, List, Any
 from loguru import logger
+from numpy.random import permutation
+from osgeo import gdal
+
 from domain.shared import Shared
 from schema.cropping_choice import CroppingChoice
+from schema.file_types import FileType
 from schema.folder_types import FolderType
 
 from schema.metadata_types import ParametersJson
@@ -18,17 +23,36 @@ class Join:
         self.shape_file: Optional[str] = self._choose_shp_file()
         self.shape_file_name: Optional[str] = self.shared.get_shp_from_path(self.shape_file)
         self.result_file_name: str = self._create_result_filename()
+        self.result_file_path: Optional[str] = None
 
     def join(self):
         self.shared.create_folder(path=self.folders[FolderType.JOINED])
         self.shared.delete_all_xml(dir_name=self.folders[FolderType.CLEANED])
 
-        print("------------")
-        print(self.cropping_choice)
+        if self.cropping_choice == CroppingChoice.ALL:
+            self.result_file_name: str = self.shared.add_file_ext(file_name=self.result_file_name, ext=FileType.TIFF)
+            self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
+            self.shared.check_if_file_exists(path=self.result_file_path)
+            return self._join_all()
+
+
+    def _join_all(self) -> None:
         print(self.shape_file)
-        print(self.shape_file_name)
-        print(self.result_file_name)
-        print("------------")
+        print(self.files)
+        gdal.Warp(
+            self.result_file_path,
+            self.files,
+            format="GTiff",
+            options=gdal.WarpOptions(
+                # creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES", "TILED=YES"],
+                creationOptions=["COMPRESS=LZW", "BIGTIFF=YES", "TILED=YES"],
+                cutlineDSName=self.shape_file,
+                dstNodata=0,
+                cropToCutline=True,
+                callback=self.shared.progress_cb,
+                callback_data=".",
+            ),
+        )
 
     def _create_result_filename(self) -> str:
         start_date, end_date = self.parameters[ParametersJson.START_DATE], self.parameters[ParametersJson.END_DATE]
