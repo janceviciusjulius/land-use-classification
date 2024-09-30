@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score
 
 ESTIMATORS = 100
 
@@ -18,7 +18,7 @@ def createGeotiff(outRaster, dataG, transform, proj):
     rasterDS = None
 
 inputRaster = "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff"
-df = pd.read_csv("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/learning_data/training_ground_June.csv", sep=",")
+df = pd.read_csv("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/learning_data/training_ground_July copy.csv", sep=",")
 outputRaster = "demo.tiff"
 data = df[
     ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI",	"NDVIre", "MNDWI"]
@@ -41,6 +41,18 @@ y_pred_test = clf.predict(X_test)
 # Calculate and print accuracy
 accuracy = accuracy_score(y_test, y_pred_test)
 print(f"Accuracy on the test set: {accuracy * 100:.2f}%")
+
+# Calculate precision, recall, F1 score, and Cohen's kappa
+precision = precision_score(y_test, y_pred_test, average='weighted')
+recall = recall_score(y_test, y_pred_test, average='weighted')
+f1 = f1_score(y_test, y_pred_test, average='weighted')
+kappa = cohen_kappa_score(y_test, y_pred_test)
+
+# Print the calculated metrics
+print(f"Precision on the test set: {precision * 100:.2f}%")
+print(f"Recall on the test set: {recall * 100:.2f}%")
+print(f"F1-score on the test set: {f1 * 100:.2f}%")
+print(f"Cohen's Kappa on the test set: {kappa:.2f}")
 
 # Continue with the full prediction process on the raster data
 ds = gdal.Open(inputRaster, gdal.GA_ReadOnly)
