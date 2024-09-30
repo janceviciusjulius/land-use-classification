@@ -22,6 +22,7 @@ rasterio = "*"
 lxml = "*"
 pydantic = "*"
 opencv-python = "*"
+scikit-learn = "*"
 
 [dev-packages]
 black = "*"
