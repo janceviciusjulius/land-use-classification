@@ -1,10 +1,15 @@
+import time
+
 from osgeo import gdal
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score
+from osgeo import gdal
 
+gdal.UseExceptions()
+start_time = time.time()
 ESTIMATORS = 100
 
 def createGeotiff(outRaster, dataG, transform, proj):
@@ -17,20 +22,24 @@ def createGeotiff(outRaster, dataG, transform, proj):
     band.WriteArray(dataG)
     rasterDS = None
 
-inputRaster = "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff"
-df = pd.read_csv("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/learning_data/training_ground_July copy.csv", sep=",")
-outputRaster = "demo.tiff"
+inputRaster = ("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/"
+               "2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff")
+df = pd.read_csv("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/"
+                 "learning_data/training_ground_July copy.csv", sep=",")
+outputRaster = "NEW1.tiff"
 data = df[
     ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI",	"NDVIre", "MNDWI"]
 ]
 label = df["COD"]
+label_values = df["COD"].unique()
+print(label_values)
 del df
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(data.values, label.values, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(data.values, label.values, test_size=0.3, random_state=42)
 
 # Train the model
-clf = RandomForestClassifier(n_estimators=ESTIMATORS)
+clf = RandomForestClassifier(n_estimators=ESTIMATORS, n_jobs=-1, max_depth=100)
 print("Training")
 clf.fit(X_train, y_train)
 
@@ -61,12 +70,12 @@ cols = ds.RasterXSize
 bands = ds.RasterCount
 geo_transform = ds.GetGeoTransform()
 projection = ds.GetProjectionRef()
-array = ds.ReadAsArray().astype("uint16")
+array = ds.ReadAsArray().astype("int16")
 ds = None
 
 array = np.stack(array, axis=2)
 array = np.reshape(array, [rows * cols, bands])
-test = pd.DataFrame(array, dtype="uint16")
+test = pd.DataFrame(array, dtype="int16")
 del array
 
 # Predict on the full raster data
@@ -84,3 +93,5 @@ createGeotiff(
     proj=projection,
 )
 del classification_RF
+end_time = time.time()
+print(f"Elapsed time: {end_time - start_time:.2f} seconds")
