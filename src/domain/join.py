@@ -2,7 +2,6 @@ import os.path
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
-from numpy.random import permutation
 from osgeo import gdal, ogr
 from osgeo.ogr import DataSource, Layer
 
