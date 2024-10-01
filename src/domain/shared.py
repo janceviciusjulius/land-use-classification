@@ -4,11 +4,12 @@ from enum import Enum
 from json import dump, load
 from os.path import isdir
 from shutil import rmtree
+from tkinter import filedialog
 from typing import Any, Dict, List, Optional, Tuple, Union
 from zipfile import BadZipfile, ZipFile
-from tkinter import filedialog
 
 from loguru import logger
+from scipy.constants import value
 
 from schema.constants import Constants
 from schema.file_modes import FileMode
@@ -193,6 +194,42 @@ class Shared:
         if isdir(folders[FolderType.PARENT]):
             self.ask_deletion(folders=folders, scenario=FolderType.PARENT)
         return self.create_folder(path=folders[FolderType.PARENT])
+
+    @staticmethod
+    def ask_for_input() -> str:
+        while True:
+            attribute_value = input("Provide attribute value: ")
+            if not attribute_value:
+                print("Error. Please provide attribute value:")
+            else:
+                break
+        return attribute_value
+
+    @staticmethod
+    def _print_list_elements(objects: List[Any]):
+        for index, object_ in enumerate(objects):
+            print(f"{index+1}. {object_}")
+
+    def select_from_list_ui(self, objects: List[Any]) -> int:
+        self._print_list_elements(objects=objects)
+        while True:
+            try:
+                attribute_number = int(input("\nEnter the index of the selected attribute name: "))
+                while not 0 < attribute_number < len(objects) + 1:
+                    self.clear_console()
+                    logger.error("No such selection.")
+                    print("Choose field attribute name:")
+                    self._print_list_elements(objects=objects)
+                    attribute_number = int(input("\nEnter the index of the selected attribute name: "))
+            except ValueError:
+                self.clear_console()
+                logger.error("Invalid input format.")
+                logger.info("Choose field attribute name:")
+                self._print_list_elements(objects=objects)
+                continue
+            else:
+                break
+        return attribute_number - 1
 
     @staticmethod
     def get_value(obj: Any, value: str) -> Any:

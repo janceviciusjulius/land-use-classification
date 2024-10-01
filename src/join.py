@@ -1,17 +1,17 @@
+import datetime as dt
 import os
 import shutil
 import sys
 import time
-import datetime as dt
 from pprint import pprint
-from tkinter import filedialog
-from tkinter.filedialog import askopenfilename, askdirectory
+from tkinter import *
+from tkinter import Tk, filedialog
+from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter.messagebox import showinfo
 
 from osgeo import gdal, ogr
 from osgeo.gdalconst import GA_Update
-from tkinter import *
-from tkinter import Tk
+
 import options
 
 

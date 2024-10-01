@@ -3,10 +3,10 @@ import subprocess
 from os import listdir
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from numpy import ndarray, seterr, nan_to_num, around, where, isin
 import rasterio
 from bs4 import BeautifulSoup
 from loguru import logger
+from numpy import around, isin, nan_to_num, ndarray, seterr, where
 from osgeo import gdal
 from osgeo.gdal import Band, Dataset
 from rasterio.enums import Resampling

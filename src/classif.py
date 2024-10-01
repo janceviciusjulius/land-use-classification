@@ -1,6 +1,6 @@
-from osgeo import gdal
-import pandas as pd
 import numpy as np
+import pandas as pd
+from osgeo import gdal
 from sklearn.ensemble import RandomForestClassifier
 
 ESTIMATORS = 100
@@ -18,10 +18,13 @@ def createGeotiff(outRaster, dataG, transform, proj):
 
 
 inputRaster = "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff"
-df = pd.read_csv("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/learning_data/training_ground_June.csv", sep=",")
+df = pd.read_csv(
+    "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/learning_data/training_ground_June.csv",
+    sep=",",
+)
 outputRaster = "demo.tiff"
 data = df[
-    ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI",	"NDVIre", "MNDWI"]
+    ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI", "NDVIre", "MNDWI"]
 ]
 label = df["COD"]
 del df

@@ -1,14 +1,16 @@
 import os.path
-from typing import Dict, Optional, List, Any
+from typing import Any, Dict, List, Optional
+
 from loguru import logger
 from numpy.random import permutation
-from osgeo import gdal
+from osgeo import gdal, ogr
+from osgeo.ogr import DataSource, Layer
 
 from domain.shared import Shared
+from schema.constants import Constants
 from schema.cropping_choice import CroppingChoice
 from schema.file_types import FileType
 from schema.folder_types import FolderType
-
 from schema.metadata_types import ParametersJson
 
 
@@ -35,10 +37,73 @@ class Join:
             self.shared.check_if_file_exists(path=self.result_file_path)
             return self._join_all()
 
+        elif self.cropping_choice == CroppingChoice.OBJECT:
+            shp_schema: List[str] = self._get_keys_from_shp()
+            key_index = self.shared.select_from_list_ui(objects=shp_schema)
+            attribute_name: str = '"' + shp_schema[key_index] + '"'
+            self._input_info()
+            attribute_value: str = self.shared.ask_for_input()
+
+            self.result_file_name: str = self.result_file_name + Constants.SPACE + attribute_value.replace("'", "")
+            self.result_file_name: str = self.shared.add_file_ext(file_name=self.result_file_name, ext=FileType.TIFF)
+            self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
+            self.shared.check_if_file_exists(path=self.result_file_path)
+
+            clause: str = f"{attribute_name}={attribute_value}"
+            return self._join_object(clause=clause)
+
+        elif self.cropping_choice == CroppingChoice.NONE:
+            self.result_file_name: str = self.shared.add_file_ext(file_name=self.result_file_name, ext=FileType.TIFF)
+            self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
+            self.shared.check_if_file_exists(path=self.result_file_path)
+            return self._join_none()
+
+    @staticmethod
+    def _input_info() -> None:
+        print(
+            "If You are providing name (string data type) please add ' in the beginning and ending of the text. "
+            "Example: 'Kauno HE Tvenkinys'."
+        )
+
+    def _get_keys_from_shp(self) -> List[str]:
+        source: DataSource = ogr.Open(self.shape_file)
+        layer: Layer = source.GetLayer()
+        schema: List[str] = []
+        layer_defn = layer.GetLayerDefn()
+        for n in range(layer_defn.GetFieldCount()):
+            key_defn = layer_defn.GetFieldDefn(n)
+            schema.append(key_defn.name)
+        return schema
+
+    def _join_none(self):
+        gdal.Warp(
+            self.result_file_path,
+            self.files,
+            format="GTiff",
+            options=gdal.WarpOptions(
+                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],
+                cropToCutline=True,
+                callback=self.shared.progress_cb,
+                callback_data=".",
+            ),
+        )
+
+    def _join_object(self, clause: str):
+        gdal.Warp(
+            self.result_file_path,
+            self.files,
+            format="GTiff",
+            options=gdal.WarpOptions(
+                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],
+                cutlineDSName=self.shape_file,
+                cropToCutline=True,
+                cutlineWhere=clause,
+                callback=self.shared.progress_cb,
+                callback_data=".",
+            ),
+        )
 
     def _join_all(self) -> None:
-        print(self.shape_file)
-        print(self.files)
         gdal.Warp(
             self.result_file_path,
             self.files,

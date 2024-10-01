@@ -1,16 +1,17 @@
 import time
 
-from osgeo import gdal
-import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, cohen_kappa_score
+import pandas as pd
 from osgeo import gdal
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (accuracy_score, cohen_kappa_score, f1_score,
+                             precision_score, recall_score)
+from sklearn.model_selection import train_test_split
 
 gdal.UseExceptions()
 start_time = time.time()
 ESTIMATORS = 100
+
 
 def createGeotiff(outRaster, dataG, transform, proj):
     driver = gdal.GetDriverByName("GTiff")
@@ -22,13 +23,19 @@ def createGeotiff(outRaster, dataG, transform, proj):
     band.WriteArray(dataG)
     rasterDS = None
 
-inputRaster = ("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/"
-               "2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff")
-df = pd.read_csv("/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/"
-                 "learning_data/training_ground_July copy.csv", sep=",")
+
+inputRaster = (
+    "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/"
+    "2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff"
+)
+df = pd.read_csv(
+    "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/"
+    "learning_data/training_ground_July copy.csv",
+    sep=",",
+)
 outputRaster = "NEW1.tiff"
 data = df[
-    ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI",	"NDVIre", "MNDWI"]
+    ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI", "NDVIre", "MNDWI"]
 ]
 label = df["COD"]
 label_values = df["COD"].unique()
@@ -52,9 +59,9 @@ accuracy = accuracy_score(y_test, y_pred_test)
 print(f"Accuracy on the test set: {accuracy * 100:.2f}%")
 
 # Calculate precision, recall, F1 score, and Cohen's kappa
-precision = precision_score(y_test, y_pred_test, average='weighted')
-recall = recall_score(y_test, y_pred_test, average='weighted')
-f1 = f1_score(y_test, y_pred_test, average='weighted')
+precision = precision_score(y_test, y_pred_test, average="weighted")
+recall = recall_score(y_test, y_pred_test, average="weighted")
+f1 = f1_score(y_test, y_pred_test, average="weighted")
 kappa = cohen_kappa_score(y_test, y_pred_test)
 
 # Print the calculated metrics
