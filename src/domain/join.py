@@ -80,7 +80,7 @@ class Join:
             self.files,
             format="GTiff",
             options=gdal.WarpOptions(
-                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"], # "TILED=YES"
+                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],  # "TILED=YES"
                 cropToCutline=True,
                 callback=self.shared.progress_cb,
                 callback_data=".",
@@ -93,7 +93,7 @@ class Join:
             self.files,
             format="GTiff",
             options=gdal.WarpOptions(
-                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"], # "TILED=YES"
+                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],  # "TILED=YES"
                 cutlineDSName=self.shape_file,
                 cropToCutline=True,
                 cutlineWhere=clause,
@@ -108,7 +108,7 @@ class Join:
             self.files,
             format="GTiff",
             options=gdal.WarpOptions(
-                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"], # "TILED=YES"
+                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],  # "TILED=YES"
                 cutlineDSName=self.shape_file,
                 dstNodata=0,
                 cropToCutline=True,

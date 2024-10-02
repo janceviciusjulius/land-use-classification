@@ -307,6 +307,11 @@ class Shared:
         return None
 
     @staticmethod
+    def list_dir(directory: str) -> List[str]:
+        files_in_dir: List[str] = os.listdir(directory)
+        return [os.path.join(directory, file) for file in files_in_dir]
+
+    @staticmethod
     def delete_all_xml(dir_name):
         delete_xml = [
             band for band in os.listdir(dir_name) if band.endswith(FileType.XML) and not band.startswith(FileType.MTD)
