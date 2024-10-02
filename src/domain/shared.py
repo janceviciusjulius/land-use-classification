@@ -307,9 +307,9 @@ class Shared:
         return None
 
     @staticmethod
-    def list_dir(directory: str) -> List[str]:
-        files_in_dir: List[str] = os.listdir(directory)
-        return [os.path.join(directory, file) for file in files_in_dir]
+    def list_dir(dir_: str) -> List[str]:
+        files_in_dir: List[str] = os.listdir(dir_)
+        return [os.path.join(dir_, file) for file in files_in_dir]
 
     @staticmethod
     def delete_all_xml(dir_name):
@@ -329,6 +329,15 @@ class Shared:
     @staticmethod
     def add_file_ext(file_name: str, ext: FileType) -> str:
         return file_name + ext
+
+    @staticmethod
+    def remove_ext(file: str) -> str:
+        filename, ext = os.path.splitext(file)
+        return filename
+
+    @staticmethod
+    def file_from_path(path: str) -> str:
+        return os.path.basename(path)
 
     @staticmethod
     def get_shp_from_path(path: str) -> Optional[str]:

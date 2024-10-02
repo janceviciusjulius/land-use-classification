@@ -7,8 +7,11 @@ from domain.download import Downloader
 from domain.join import Join
 from domain.merge import Merge
 from domain.shared import Shared
+from schema.constants import Constants
+from schema.names import Name
 
 gdal.UseExceptions()
+
 
 def download_algorithm():
     shared: Shared = Shared()
@@ -35,23 +38,24 @@ def join_algorithm():
 def classification_algorithm():
     shared: Shared = Shared()
     classification: Classification = Classification(shared=shared)
+    classification.classify()
 
 
 def main_page():
     window = Tk()
-    window.title("System")
+    window.title(Name.TITLE)
 
-    Label(window, text="Choose an algorithm", font="Lucida 14 bold").grid(row=1, columnspan=2)
+    Label(window, text=Name.CHOOSE, font=Name.FONT).grid(row=1, columnspan=2)
 
-    btn1 = Button(window, text="Download Sentinel data", command=lambda: download_algorithm())
-    btn2 = Button(window, text="Join/Crop", command=lambda: join_algorithm())
-    btn3 = Button(window, text="Data Classification", command=lambda: classification_algorithm())
+    btn1 = Button(window, text=Name.DOWNLOAD, command=lambda: download_algorithm())
+    btn2 = Button(window, text=Name.JOIN, command=lambda: join_algorithm())
+    btn3 = Button(window, text=Name.CLASSIFICATION, command=lambda: classification_algorithm())
 
-    btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky="ew")
-    btn2.grid(row=4, columnspan=2, padx=5, pady=5, sticky="ew")
-    btn3.grid(row=6, columnspan=2, padx=5, pady=5, sticky="ew")
+    btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
+    btn2.grid(row=4, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
+    btn3.grid(row=6, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
 
-    close_btn = Button(window, text="Close program", command=window.destroy)
+    close_btn = Button(window, text=Name.CLOSE, command=window.destroy)
     close_btn.grid(row=8, columnspan=2, padx=10, pady=10)
 
     window.mainloop()

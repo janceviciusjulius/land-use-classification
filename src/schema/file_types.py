@@ -7,6 +7,7 @@ class FileType(str, Enum):
     XML = ".xml"
     GPKG = ".gpkg"
     SHP = ".shp"
+    PKL = ".pkl"
 
     MTD = "MTD"
 

@@ -12,6 +12,34 @@ start_time = time.time()
 ESTIMATORS = 100
 
 
+from enum import Enum
+
+# Enum for the label column
+class LabelColumn(str, Enum):
+    COD = "COD"
+
+    def __str__(self) -> str:
+        return self.value
+
+# Enum for the data columns
+class DataColumns(str, Enum):
+    S2_2 = "S2_2"
+    S2_3 = "S2_3"
+    S2_4 = "S2_4"
+    S2_5 = "S2_5"
+    S2_6 = "S2_6"
+    S2_7 = "S2_7"
+    S2_8 = "S2_8"
+    S2_8A = "S2_8A"
+    S2_11 = "S2_11"
+    S2_12 = "S2_12"
+    NDTI = "NDTI"
+    NDVIre = "NDVIre"
+    MNDWI = "MNDWI"
+
+    def __str__(self) -> str:
+        return self.value
+
 def createGeotiff(outRaster, dataG, transform, proj):
     driver = gdal.GetDriverByName("GTiff")
     rowsG, colsG = dataG.shape
@@ -33,10 +61,15 @@ df = pd.read_csv(
     sep=",",
 )
 outputRaster = "NEW1.tiff"
-data = df[
-    ["S2_2", "S2_3", "S2_4", "S2_5", "S2_6", "S2_7", "S2_8", "S2_8A", "S2_11", "S2_12", "NDTI", "NDVIre", "MNDWI"]
-]
-label = df["COD"]
+
+data_columns = [col for col in DataColumns]
+label_column = LabelColumn.COD
+
+print(data_columns)
+print(label_column)
+
+data = df[data_columns]
+label = df[label_column]
 label_values = df["COD"].unique()
 print(label_values)
 del df
