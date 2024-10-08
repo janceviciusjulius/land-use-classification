@@ -162,3 +162,4 @@ cython_debug/
 /id/
 /learning_data/Bibliotekos/
 /Bibliotekos/
+*.tiff
