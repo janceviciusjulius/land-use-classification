@@ -2,12 +2,13 @@ import time
 import numpy as np
 import pandas as pd
 from osgeo import gdal
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+from sklearn.impute import SimpleImputer
 
 gdal.UseExceptions()
 start_time = time.time()
-ESTIMATORS = 100
+N_NEIGHBORS = 5  # Number of neighbors for KNN
 
 from enum import Enum
 
@@ -70,21 +71,24 @@ test_df = pd.read_csv(test_data_path, sep=",")
 data_columns = [col for col in DataColumns]
 label_column = LabelColumn.COD
 
-# Split data into features and labels for training
-X_train = train_df[data_columns].values
+# Define the imputer to replace missing values with the mean of the column
+imputer = SimpleImputer(strategy='mean')
+
+# Impute missing values in the training dataset
+X_train = imputer.fit_transform(train_df[data_columns].values)
 y_train = train_df[label_column].values
 
-# Split data into features and labels for testing
-X_test = test_df[data_columns].values
+# Impute missing values in the testing dataset
+X_test = imputer.transform(test_df[data_columns].values)
 y_test = test_df[label_column].values
 
 # Train the model
-clf = RandomForestClassifier(n_estimators=ESTIMATORS, n_jobs=-1, max_depth=100)
-print("Training")
+clf = KNeighborsClassifier(n_neighbors=N_NEIGHBORS, n_jobs=-1)
+print("Training KNN")
 clf.fit(X_train, y_train)
 
 # Predict on the test set
-print("Predicting")
+print("Predicting with KNN")
 y_pred_test = clf.predict(X_test)
 
 # Calculate and print accuracy
@@ -118,20 +122,23 @@ array = np.reshape(array, [rows * cols, bands])
 test = pd.DataFrame(array, dtype="int16")
 del array
 
+# Impute missing values for the full raster data before prediction
+test_imputed = imputer.transform(test)
+
 # Predict on the full raster data
-y_pred = clf.predict(test)
-del test
-classification_RF = y_pred.reshape((rows, cols))
+y_pred = clf.predict(test_imputed)
+del test_imputed
+classification_KNN = y_pred.reshape((rows, cols))
 del y_pred
 
 # Save the classified raster
 print("Saving")
 createGeotiff(
     outRaster=outputRaster,
-    dataG=classification_RF,
+    dataG=classification_KNN,
     transform=geo_transform,
     proj=projection,
 )
-del classification_RF
+del classification_KNN
 end_time = time.time()
 print(f"Elapsed time: {end_time - start_time:.2f} seconds")

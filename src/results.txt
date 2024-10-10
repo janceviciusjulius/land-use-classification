@@ -1,0 +1,17 @@
+RF
+Training
+Predicting
+Accuracy on the test set: 75.21%
+Precision on the test set: 80.05%
+Recall on the test set: 75.21%
+F1-score on the test set: 71.21%
+Cohen's Kappa on the test set: 0.70
+
+KNN
+Training KNN
+Predicting with KNN
+Accuracy on the test set: 74.61%
+Precision on the test set: 69.60%
+Recall on the test set: 74.61%
+F1-score on the test set: 70.91%
+Cohen's Kappa on the test set: 0.69
