@@ -50,11 +50,18 @@ def createGeotiff(outRaster, dataG, transform, proj):
     band.WriteArray(dataG)
     rasterDS = None
 
-# File paths
-train_data_path = "/path_to_your_training_data.csv"
-test_data_path = "/path_to_your_testing_data.csv"
-inputRaster = "/path_to_your_input_raster.tiff"
-outputRaster = "output_cnn.tiff"
+train_data_path = (
+    "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/"
+    "learning_data/training_ground_July copy.csv"
+)
+test_data_path = (
+    "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/learning_data/training_ground_July_Latvia.csv"
+)
+inputRaster = (
+    "/Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/data/"
+    "2024-07-09..2024-07-10 0-1%/CLEANED 2024-07-09..2024-07-10 0-1%/2024-07-09..2024-07-10 T35UMA.tiff"
+)
+outputRaster = "NEWWW1.tiff"
 
 # Load training data
 train_df = pd.read_csv(train_data_path, sep=",")
@@ -76,18 +83,19 @@ y_train = train_df[label_column].values
 X_test = imputer.transform(test_df[data_columns].values)
 y_test = test_df[label_column].values
 
-# Reshape the data into image-like format for CNN
-X_train = X_train.reshape((-1, 3, 4, 1))  # assuming we can group features into a 3x4 image with 1 channel
-X_test = X_test.reshape((-1, 3, 4, 1))
+# Reshape the data into image-like format for CNN (adjusting to 13x1x1)
+X_train = X_train.reshape((-1, 13, 1, 1))  # Adjusted to match 13 features
+X_test = X_test.reshape((-1, 13, 1, 1))
 
 # One-hot encode the labels
 y_train_cat = to_categorical(y_train)
 y_test_cat = to_categorical(y_test)
 
 # Create the CNN model
+# Create the CNN model with a smaller kernel size (1x1) to fit the input shape
+# Create the CNN model without MaxPooling2D
 model = Sequential([
-    Conv2D(32, (3, 3), activation='relu', input_shape=(3, 4, 1)),  # Adjust input_shape to your raster size
-    MaxPooling2D(pool_size=(2, 2)),
+    Conv2D(32, (1, 1), activation='relu', input_shape=(13, 1, 1)),  # Adjusted kernel size to (1,1)
     Flatten(),
     Dense(64, activation='relu'),
     Dense(y_train_cat.shape[1], activation='softmax')  # Number of output classes
@@ -139,8 +147,8 @@ del array
 # Impute missing values for the full raster data before prediction
 test_imputed = imputer.transform(test)
 
-# Reshape the raster data for CNN input
-test_imputed = test_imputed.reshape((-1, 3, 4, 1))
+# Reshape the raster data for CNN input (adjusted to match 13 features)
+test_imputed = test_imputed.reshape((-1, 13, 1, 1))
 
 # Predict on the full raster data
 y_pred_raster = model.predict(test_imputed)

@@ -22,3 +22,34 @@ Precision on the test set: 69.48%
 Recall on the test set: 73.07%
 F1-score on the test set: 70.01%
 Cohen's Kappa on the test set: 0.68
+
+CNN
+Training CNN
+Epoch 1/10
+2024-10-15 23:28:18.945802: I tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.cc:117] Plugin optimizer for device_type GPU is enabled.
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 40s 12ms/step - accuracy: 0.9487 - loss: 8.1263 - val_accuracy: 0.9731 - val_loss: 0.2487
+Epoch 2/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 38s 12ms/step - accuracy: 0.9877 - loss: 0.2344 - val_accuracy: 0.9154 - val_loss: 2.0014
+Epoch 3/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 36s 11ms/step - accuracy: 0.9893 - loss: 0.1055 - val_accuracy: 0.9879 - val_loss: 0.0584
+Epoch 4/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 36s 11ms/step - accuracy: 0.9908 - loss: 0.0521 - val_accuracy: 0.9958 - val_loss: 0.0134
+Epoch 5/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 37s 12ms/step - accuracy: 0.9929 - loss: 0.0354 - val_accuracy: 0.9919 - val_loss: 0.0230
+Epoch 6/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 37s 11ms/step - accuracy: 0.9934 - loss: 0.0300 - val_accuracy: 0.9950 - val_loss: 0.0156
+Epoch 7/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 36s 11ms/step - accuracy: 0.9938 - loss: 0.0297 - val_accuracy: 0.9770 - val_loss: 0.0521
+Epoch 8/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 36s 11ms/step - accuracy: 0.9951 - loss: 0.0237 - val_accuracy: 0.9303 - val_loss: 0.2922
+Epoch 9/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 36s 11ms/step - accuracy: 0.9944 - loss: 0.0269 - val_accuracy: 0.9737 - val_loss: 0.0612
+Epoch 10/10
+3177/3177 ━━━━━━━━━━━━━━━━━━━━ 36s 11ms/step - accuracy: 0.9959 - loss: 0.0185 - val_accuracy: 0.9382 - val_loss: 0.2069
+Predicting with CNN
+707/707 ━━━━━━━━━━━━━━━━━━━━ 1s 1ms/step
+Accuracy on the test set: 48.16%
+Precision on the test set: 65.73%
+Recall on the test set: 48.16%
+F1-score on the test set: 43.64%
+Cohen's Kappa on the test set: 0.40
