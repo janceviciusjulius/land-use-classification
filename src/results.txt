@@ -15,3 +15,10 @@ Precision on the test set: 69.60%
 Recall on the test set: 74.61%
 F1-score on the test set: 70.91%
 Cohen's Kappa on the test set: 0.69
+
+Predicting with SVM
+Accuracy on the test set: 73.07%
+Precision on the test set: 69.48%
+Recall on the test set: 73.07%
+F1-score on the test set: 70.01%
+Cohen's Kappa on the test set: 0.68
