@@ -24,7 +24,7 @@ class Classification:
     ESTIMATORS: int = 100
     N_JOBS: int = -1
     RANDOM_STATE: int = 42
-    TEST_SIZE: float = 0.3
+    TEST_SIZE: float = 0.2
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
