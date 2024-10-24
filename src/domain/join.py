@@ -6,6 +6,7 @@ from osgeo import gdal, ogr
 from osgeo.ogr import DataSource, Layer
 
 from domain.shared import Shared
+from schema.algorithm import Algorithm
 from schema.constants import Constants
 from schema.cropping_choice import CroppingChoice
 from schema.file_types import FileType
@@ -17,7 +18,7 @@ class Join:
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
-        self.files: List[str] = self.shared.choose_files_from_folder()
+        self.files: List[str] = self.shared.choose_files_from_folder(algorithm=Algorithm.JOIN)
         self.parameters: Dict[str, Any] = self.shared.get_parameters(files_paths=self.files)
         self.folders: Dict[FolderType, str] = self.parameters[ParametersJson.FOLDERS]
         self.cropping_choice: CroppingChoice = self._ask_for_cropping_choice()
@@ -118,7 +119,10 @@ class Join:
         )
 
     def _create_result_filename(self) -> str:
-        start_date, end_date = self.parameters[ParametersJson.START_DATE], self.parameters[ParametersJson.END_DATE]
+        start_date, end_date = (
+            self.parameters[ParametersJson.START_DATE],
+            self.parameters[ParametersJson.END_DATE],
+        )
         if self.cropping_choice == CroppingChoice.NONE:
             return f"{FolderType.JOINED} {start_date}..{end_date}"
         return f"{FolderType.JOINED} {self.shape_file_name} {start_date}..{end_date}"

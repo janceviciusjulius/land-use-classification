@@ -106,7 +106,14 @@ class Merge:
             MNDWI: Optional[ndarray] = MNDWI.astype("int16")
             write_MNDWI.WriteArray(MNDWI)
 
-            raster, band3, band4, band5, band11, band12 = None, None, None, None, None, None
+            raster, band3, band4, band5, band11, band12 = (
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
             logger.info(f"Successfully counted indexes for {index + 1} file")
         logger.info("End of index counting process")
 
@@ -138,7 +145,10 @@ class Merge:
                             best_raster.WriteArray(best_raster_array)
 
                             best_raster, best_raster_array = None, None
-                            interpolation_raster, interpolation_raster_array = None, None
+                            interpolation_raster, interpolation_raster_array = (
+                                None,
+                                None,
+                            )
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
                         tile=image_details[0][CloudCoverageJson.TILE],

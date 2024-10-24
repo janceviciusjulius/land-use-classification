@@ -7,7 +7,5 @@ class Constants(str, Enum):
 
     STICKY = "ew"
 
-
-
     def __str__(self) -> str:
         return self.value

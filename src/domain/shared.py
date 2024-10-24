@@ -11,6 +11,7 @@ from zipfile import BadZipfile, ZipFile
 from loguru import logger
 from scipy.constants import value
 
+from schema.algorithm import Algorithm
 from schema.constants import Constants
 from schema.file_modes import FileMode
 from schema.file_types import FileType
@@ -88,16 +89,24 @@ class Shared:
         parent: str = os.path.dirname(src_root)
         return parent
 
-    def choose_files_from_folder(self) -> List[str]:
+    def choose_files_from_folder(self, algorithm: Algorithm) -> List[str]:
         self.clear_console()
-        logger.info(f"Data joining/cropping algorithm")
-        logger.info("Please choose file/files which You want to join/crop")
+        match algorithm:
+            case Algorithm.JOIN:
+                logger.info(f"Data joining/cropping algorithm")
+                logger.info("Please choose file/files which You want to join/crop")
+            case Algorithm.CLASSIFICATION:
+                logger.info(f"Data classification algorithm")
+                logger.info("Please choose file/files which You want to classify")
         files_paths = list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
         return files_paths
 
     def choose_shp_from_folder(self) -> str:
         logger.info("Please choose .shp file for cropping...")
-        filetypes: Tuple[Tuple[str, str], ...] = (("ESRI Shapefile", "*.shp"), ("GeoPackage", "*.gpkg"))
+        filetypes: Tuple[Tuple[str, str], ...] = (
+            ("ESRI Shapefile", "*.shp"),
+            ("GeoPackage", "*.gpkg"),
+        )
         shp_path: str = filedialog.askopenfilename(
             initialdir=self.root_folders[RootFolders.SHP_FOLDER], filetypes=filetypes
         )
@@ -148,6 +157,7 @@ class Shared:
         }
 
         logger.info("NOTE: All downloaded and pre-processed data will be deleted.")
+
         boolean: str = str(input("Some data already exists. Do you want to delete the data (Y/N)? "))
 
         if boolean.lower() == YesNo.YES:

@@ -36,6 +36,7 @@ def join_algorithm():
 
 
 def classification_algorithm():
+    print("OPA")
     shared: Shared = Shared()
     classification: Classification = Classification(shared=shared)
     classification.classify()

@@ -1,10 +1,12 @@
 from enum import Enum
 
+
 class LabelColumn(str, Enum):
     COD = "COD"
 
     def __str__(self) -> str:
         return self.value
+
 
 # Enum for the data columns
 class DataColumns(str, Enum):
