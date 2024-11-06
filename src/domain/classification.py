@@ -1,5 +1,7 @@
 import os.path
 import pickle
+import re
+from calendar import month
 from typing import Any, Dict, List
 
 import numpy as np
@@ -13,6 +15,7 @@ from sklearn.model_selection import train_test_split
 
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
+from exceptions.exceptions import MonthExtractionException
 from schema.algorithm import Algorithm
 from schema.columns import DataColumns, LabelColumn
 from schema.constants import Constants
@@ -20,6 +23,7 @@ from schema.file_types import FileType
 from schema.folder_types import FolderType
 from schema.metadata_types import ParametersJson
 from schema.months import Month
+from schema.regexes import Regex
 from schema.root_folders import RootFolders
 from schema.yes_no import YesNo
 
@@ -43,11 +47,18 @@ class Classification:
     def classify(self):
         if self._ask_for_relearning():
             self._train_and_save_model()
+
         self.models = self._get_model_paths()
         self.shared.create_folder(path=self.folders[FolderType.CLASSIFIED])
 
         for file in self.files:
-            print(file)
+            file_name: str = os.path.basename(file)
+            file_month: int = self._get_month(file_name=file_name)
+
+            month_map = self._month_map()
+            month_enum: Month = month_map[file_month]
+            model = self._load_model(month=month_enum)
+
 
 
     def _get_model_paths(self) -> Dict[Month, str]:
@@ -147,7 +158,21 @@ class Classification:
         with open(file_path, "w"):
             pass
 
-    def load_model(self):
-        with open(model_path, 'rb') as file:
+    def _load_model(self, month: Month):
+        print(self.models[month])
+        with open(self.models[month], "rb") as file:
             model = pickle.load(file)
         return model
+
+    @staticmethod
+    def _month_map() -> Dict[int, Month]:
+        return {i: month for i, month in enumerate(Month, start=1)}
+
+    @staticmethod
+    def _get_month(file_name: str) -> int:
+        match = re.search(Regex.DATE_REGEX, file_name)
+        if match:
+            file_month = match.group(2)
+            return int(file_month)
+        else:
+            raise MonthExtractionException(f"Cannot extract month from {file_name}")
