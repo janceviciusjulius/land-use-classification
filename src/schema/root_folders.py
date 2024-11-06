@@ -6,7 +6,7 @@ class RootFolders(str, Enum):
     DATA_FOLDER = "data"
     PROGRAM_FOLDER = "program_files"
     LEARNING_FOLDER = "learning_data"
-    TRAINING_FOLDER = "models"
+    MODEL_FOLDER = "models"
 
     def __str__(self) -> str:
         return self.value

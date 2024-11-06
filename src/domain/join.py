@@ -5,6 +5,7 @@ from loguru import logger
 from osgeo import gdal, ogr
 from osgeo.ogr import DataSource, Layer
 
+from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
 from schema.algorithm import Algorithm
 from schema.constants import Constants
@@ -12,6 +13,8 @@ from schema.cropping_choice import CroppingChoice
 from schema.file_types import FileType
 from schema.folder_types import FolderType
 from schema.metadata_types import ParametersJson
+
+configurate_logger()
 
 
 class Join:
