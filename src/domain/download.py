@@ -19,8 +19,7 @@ from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
 from schema.downloader_info import DownloadInfo
 from schema.folder_types import FolderType
-from schema.metadata_types import CloudCoverageJson, Metadata, ParametersJson
-from schema.root_folders import RootFolders
+from schema.metadata_types import CloudCoverageJson, Metadata
 from schema.yes_no import YesNo
 
 configurate_logger()

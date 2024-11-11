@@ -1,7 +1,6 @@
 import os.path
 import pickle
 import re
-from calendar import month
 from typing import Any, Dict, List
 
 import numpy as np
@@ -19,6 +18,7 @@ from exceptions.exceptions import MonthExtractionException
 from schema.algorithm import Algorithm
 from schema.columns import DataColumns, LabelColumn
 from schema.constants import Constants
+from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderType
 from schema.metadata_types import ParametersJson
@@ -55,18 +55,17 @@ class Classification:
             file_name: str = os.path.basename(file)
             file_month: int = self._get_month(file_name=file_name)
 
-            month_map = self._month_map()
+            month_map: Dict[int, Month] = self._month_map()
             month_enum: Month = month_map[file_month]
             model = self._load_model(month=month_enum)
-
-
+            # TODO: TBC
 
     def _get_model_paths(self) -> Dict[Month, str]:
         model_paths: Dict[Month, str] = {}
         model_folder = self.shared.root_folders[RootFolders.MODEL_FOLDER]
 
         for model_name in os.listdir(model_folder):
-            model_path = os.path.join(model_folder, model_name)
+            model_path: str = os.path.join(model_folder, model_name)
             for month in Month:
                 if month.value in model_name.lower():
                     model_paths[month] = model_path
@@ -80,8 +79,7 @@ class Classification:
                 return True
             elif boolean.lower() == YesNo.NO:
                 return False
-            else:
-                self.shared.clear_console()
+            self.shared.clear_console()
 
     def _train_and_save_model(self) -> None:
         self._initialize_file()
@@ -142,31 +140,32 @@ class Classification:
             ]
             self._write_accuracies_to_file(messages=messages)
 
-            with open(model_path, "wb") as model_file:
+            with open(model_path, FileMode.WRITE_B) as model_file:
                 pickle.dump(clf, model_file)
+
             logger.info(f"Model saved to {model_path}")
             logger.info(Constants.LINE)
 
     def _write_accuracies_to_file(self, messages: List[str]) -> None:
         file_path: str = os.path.join(self.shared.root_folders[RootFolders.PROGRAM_FOLDER], Constants.ACCURACIES_FILE)
-        with open(file_path, "a") as file:
+        with open(file_path, FileMode.APPEND) as file:
             for message in messages:
                 file.write(message + Constants.NEW_LINE)
 
     def _initialize_file(self) -> None:
         file_path: str = os.path.join(self.shared.root_folders[RootFolders.PROGRAM_FOLDER], Constants.ACCURACIES_FILE)
-        with open(file_path, "w"):
+        with open(file_path, FileMode.WRITE):
             pass
 
     def _load_model(self, month: Month):
         print(self.models[month])
-        with open(self.models[month], "rb") as file:
+        with open(self.models[month], FileMode.READ_B) as file:
             model = pickle.load(file)
         return model
 
     @staticmethod
     def _month_map() -> Dict[int, Month]:
-        return {i: month for i, month in enumerate(Month, start=1)}
+        return {i: month_enum for i, month_enum in enumerate(Month, start=1)}
 
     @staticmethod
     def _get_month(file_name: str) -> int:
