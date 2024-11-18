@@ -1,6 +1,7 @@
 import os.path
 import pickle
 import re
+import sys
 from typing import Any, Dict, List
 
 import numpy as np
@@ -21,6 +22,7 @@ from schema.constants import Constants
 from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderType
+from schema.library_type import LibraryType
 from schema.metadata_types import ParametersJson
 from schema.months import Month
 from schema.regexes import Regex
@@ -34,8 +36,6 @@ class Classification:
     MAX_DEPTH: int = 100
     ESTIMATORS: int = 100
     N_JOBS: int = -1
-    RANDOM_STATE: int = 42
-    TEST_SIZE: float = 0.2
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
@@ -54,11 +54,40 @@ class Classification:
         for file in self.files:
             file_name: str = os.path.basename(file)
             file_month: int = self._get_month(file_name=file_name)
+            output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
 
             month_map: Dict[int, Month] = self._month_map()
             month_enum: Month = month_map[file_month]
             model = self._load_model(month=month_enum)
+
+            ds = gdal.Open(file, gdal.GA_ReadOnly)
+            rows = ds.RasterYSize
+            cols = ds.RasterXSize
+            bands = ds.RasterCount
+            geo_transform = ds.GetGeoTransform()
+            proj = ds.GetProjectionRef()
+            array = ds.ReadAsArray().astype("int16")
+            ds = None
+
+            array = np.stack(array, axis=2)
+            array = np.reshape(array, [rows * cols, bands])
+
+            classification_SVM = model.predict(array)
+            classification_SVM = classification_SVM.reshape((rows, cols))
+
+            self._createGeotiff(outRaster=output_path, dataG=classification_SVM, transform=geo_transform, proj=proj)
             # TODO: TBC
+
+    @staticmethod
+    def _createGeotiff(outRaster, dataG, transform, proj):
+        driver = gdal.GetDriverByName("GTiff")
+        rowsG, colsG = dataG.shape
+        rasterDS = driver.Create(outRaster, colsG, rowsG, 1, gdal.GDT_Byte)
+        rasterDS.SetGeoTransform(transform)
+        rasterDS.SetProjection(proj)
+        band = rasterDS.GetRasterBand(1)
+        band.WriteArray(dataG)
+        rasterDS = None
 
     def _get_model_paths(self) -> Dict[Month, str]:
         model_paths: Dict[Month, str] = {}
@@ -81,28 +110,44 @@ class Classification:
                 return False
             self.shared.clear_console()
 
+    def _group_libraries(self, all_libraries: List[str]) -> Dict[Month, Dict[LibraryType, str]]:
+        group_libraries: Dict[Month, Dict[LibraryType, str]] = {month: {} for month in Month}
+        for library in all_libraries:
+            library_name: str = os.path.basename(library)
+            for month in Month:
+                if str(month) in library_name.lower():
+                    for library_type in LibraryType:
+                        if str(library_type) in library_name.lower():
+                            group_libraries[month][library_type] = library
+        return {key: value for key, value in group_libraries.items() if value and len(value) == 2}
+
+
     def _train_and_save_model(self) -> None:
         self._initialize_file()
-        train_libraries: List[str] = self.shared.list_dir(dir_=self.shared.root_folders[RootFolders.LEARNING_FOLDER])
-        for train_library in train_libraries:
+        all_libraries: List[str] = self.shared.list_dir(dir_=self.shared.root_folders[RootFolders.LEARNING_FOLDER])
+
+        grouped_libraries: Dict[Month, Dict[LibraryType, str]] = self._group_libraries(all_libraries=all_libraries)
+        print(grouped_libraries)
+        for month, libraries_info in grouped_libraries.items():
+            train_library: str = libraries_info[LibraryType.TRAIN]
+            validation_library: str = libraries_info[LibraryType.VALIDATION]
             try:
-                df: DataFrame = pd.read_csv(train_library)
-            except UnicodeDecodeError:
-                logger.error(f"UnicodeDecodeError on {train_library} library.")
+                train_df: DataFrame = pd.read_csv(train_library)
+                test_df: DataFrame = pd.read_csv(validation_library)
+            except (FileNotFoundError, UnicodeDecodeError) as error:
+                logger.error(f"{error.__class__.__name__} on {train_library} library.")
                 logger.info(Constants.LINE)
                 continue
 
-            data: np.ndarray = df[[col for col in DataColumns]].values
-            labels: np.ndarray = df[LabelColumn.COD].values
+            X_train: np.ndarray = train_df[[col for col in DataColumns]].values
+            y_train: np.ndarray = train_df[LabelColumn.COD].values
+            X_test: np.ndarray = test_df[[col for col in DataColumns]].values
+            y_test: np.ndarray = test_df[LabelColumn.COD].values
 
             filename: str = self.shared.file_from_path(path=train_library)
             filename_without_ext: str = self.shared.remove_ext(file=filename)
             model_filename = self.shared.add_file_ext(file_name=filename_without_ext, ext=FileType.PKL)
             model_path: str = os.path.join(self.shared.root_folders[RootFolders.MODEL_FOLDER], model_filename)
-
-            X_train, X_test, y_train, y_test = train_test_split(
-                data, labels, test_size=self.TEST_SIZE, random_state=self.RANDOM_STATE
-            )
 
             clf = RandomForestClassifier(
                 n_estimators=self.ESTIMATORS,
@@ -129,13 +174,15 @@ class Classification:
             kappa_result: str = f"Cohen's Kappa on the test set: {kappa * 100:.2f}"
             logger.info(kappa_result)
 
+            path_info: str = f"Model saved to: {model_path}"
             messages: List[str] = [
-                filename_without_ext.upper(),
+                month.value.upper(),
                 accuracy_result,
                 precision_result,
                 recall_result,
                 f1_result,
                 kappa_result,
+                path_info,
                 Constants.LINE,
             ]
             self._write_accuracies_to_file(messages=messages)
@@ -143,7 +190,7 @@ class Classification:
             with open(model_path, FileMode.WRITE_B) as model_file:
                 pickle.dump(clf, model_file)
 
-            logger.info(f"Model saved to {model_path}")
+            logger.info(path_info)
             logger.info(Constants.LINE)
 
     def _write_accuracies_to_file(self, messages: List[str]) -> None:
@@ -158,10 +205,12 @@ class Classification:
             pass
 
     def _load_model(self, month: Month):
-        print(self.models[month])
-        with open(self.models[month], FileMode.READ_B) as file:
-            model = pickle.load(file)
-        return model
+        try:
+            with open(self.models[month], FileMode.READ_B) as file:
+                return pickle.load(file)
+        except (FileNotFoundError, pickle.UnpicklingError) as error:
+            logger.error(f"{error.__class__.__name__} on {str(month)} model.")
+
 
     @staticmethod
     def _month_map() -> Dict[int, Month]:

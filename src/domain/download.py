@@ -76,7 +76,7 @@ class Downloader:
                     feature_list=info[DownloadInfo.FEATURES],
                     dir=self.folders[FolderType.DOWNLOAD],
                 )
-                sleep(1)
+                sleep(0.5)
                 self.files[Metadata.CLOUD_COVERAGE] = self.save_downloaded_files_id(
                     features=info[DownloadInfo.FEATURES_INFO]
                 )

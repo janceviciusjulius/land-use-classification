@@ -1,35 +1,24 @@
-TRAINING_GROUND_JULY COPY
-Accuracy on the test set: 99.94%
-Precision on the test set: 99.94%
-Recall on the test set: 99.94%
-F1-score on the test set: 99.94%
-Cohen's Kappa on the test set: 99.92
+APRIL
+Accuracy on the test set: 100.00%
+Precision on the test set: 100.00%
+Recall on the test set: 100.00%
+F1-score on the test set: 100.00%
+Cohen's Kappa on the test set: 100.00
+Model saved to /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_April.pkl
 ------------------------------------------------------
-TRAINING_GROUND_APRIL
-Accuracy on the test set: 99.94%
-Precision on the test set: 99.94%
-Recall on the test set: 99.94%
-F1-score on the test set: 99.94%
-Cohen's Kappa on the test set: 99.93
+MAY
+Accuracy on the test set: 100.00%
+Precision on the test set: 100.00%
+Recall on the test set: 100.00%
+F1-score on the test set: 100.00%
+Cohen's Kappa on the test set: 100.00
+Model saved to /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_May.pkl
 ------------------------------------------------------
-TRAINING_GROUND_JULY_LATVIA
-Accuracy on the test set: 99.98%
-Precision on the test set: 99.98%
-Recall on the test set: 99.98%
-F1-score on the test set: 99.98%
-Cohen's Kappa on the test set: 99.97
-------------------------------------------------------
-TRAINING_GROUND_SEPTEMBER COPY
-Accuracy on the test set: 99.96%
-Precision on the test set: 99.96%
-Recall on the test set: 99.96%
-F1-score on the test set: 99.96%
-Cohen's Kappa on the test set: 99.95
-------------------------------------------------------
-TRAINING_GROUND_MAY
-Accuracy on the test set: 99.98%
-Precision on the test set: 99.98%
-Recall on the test set: 99.98%
-F1-score on the test set: 99.98%
-Cohen's Kappa on the test set: 99.97
+JULY
+Accuracy on the test set: 100.00%
+Precision on the test set: 100.00%
+Recall on the test set: 100.00%
+F1-score on the test set: 100.00%
+Cohen's Kappa on the test set: 100.00
+Model saved to /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_July.pkl
 ------------------------------------------------------
