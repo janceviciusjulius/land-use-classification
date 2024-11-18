@@ -11,7 +11,6 @@ from osgeo import gdal
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
-from sklearn.model_selection import train_test_split
 
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
@@ -51,7 +50,7 @@ class Classification:
         self.models = self._get_model_paths()
         self.shared.create_folder(path=self.folders[FolderType.CLASSIFIED])
 
-        for file in self.files:
+        for index, file in enumerate(self.files):
             file_name: str = os.path.basename(file)
             file_month: int = self._get_month(file_name=file_name)
             output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
@@ -74,9 +73,11 @@ class Classification:
 
             classification_SVM = model.predict(array)
             classification_SVM = classification_SVM.reshape((rows, cols))
-
+            print(array, classification_SVM)
+            classification_SVM[array[0] == 0] = 0
             self._createGeotiff(outRaster=output_path, dataG=classification_SVM, transform=geo_transform, proj=proj)
-            # TODO: TBC
+            logger.info(f"Successfully classified {index} file.")
+            # TODO: FINISH WITH MASK CLOUD FOR 0 finding from input and output.
 
     @staticmethod
     def _createGeotiff(outRaster, dataG, transform, proj):
