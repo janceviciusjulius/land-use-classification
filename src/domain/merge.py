@@ -161,9 +161,11 @@ class Merge:
 
     @staticmethod
     def _rename_interpolated_filename(filename: str, tile: str, interval: str) -> None:
-        new_filename: str = f"{interval} {tile}{FileType.TIFF.value}"
-        new_filename_path = os.path.join(os.path.dirname(filename), new_filename)
-        os.rename(filename, new_filename_path)
+        if filename:
+            new_filename: str = f"{interval} {tile}{FileType.TIFF.value}"
+            new_filename_path = os.path.join(os.path.dirname(filename), new_filename)
+            os.rename(filename, new_filename_path)
+
 
     @staticmethod
     def sort_image_info(

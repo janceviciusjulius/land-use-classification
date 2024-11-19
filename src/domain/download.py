@@ -13,13 +13,16 @@ from loguru import logger
 from pandas import DataFrame
 from PIL import Image
 from shapely import wkt
+from tqdm import tqdm
 
 from additional.cdse import CDSE
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
 from schema.downloader_info import DownloadInfo
+from schema.file_types import FileType
 from schema.folder_types import FolderType
 from schema.metadata_types import CloudCoverageJson, Metadata
+from schema.s2_package_content import PackageContent
 from schema.yes_no import YesNo
 
 configurate_logger()
@@ -116,22 +119,24 @@ class Downloader:
     @staticmethod
     def _unpack_s2_bands(source, destination):
         files: List[str] = os.listdir(source)
-        for i in range(len(files)):
+        pbar: tqdm = tqdm(range(len(files)), desc="Unpacking S2 bands", unit="package")
+        for i in pbar:
+            pbar.set_description(f"Unpacking {i+1} file")
             temp_band_folder: str = os.path.join(destination, files[i])
             os.mkdir(temp_band_folder)
 
             dir_path: str = os.path.join(source, files[i])
             dir_files: List[str] = os.listdir(dir_path)
             for dir_file in dir_files:
-                if dir_file.startswith("MTD") and dir_file.endswith(".xml"):
+                if dir_file.startswith("MTD") and dir_file.endswith(FileType.XML):
                     copyfile(
                         os.path.join(dir_path, dir_file),
                         os.path.join(temp_band_folder, dir_file),
                     )
             # End of XML part
-            folder: str = os.path.join(source, files[i], "GRANULE")
+            folder: str = os.path.join(source, files[i], PackageContent.GRANULE)
             data_name: List[str] = os.listdir(folder)
-            folder: str = os.path.join(folder, data_name[0], "IMG_DATA")
+            folder: str = os.path.join(folder, data_name[0], PackageContent.IMG_DATA)
             img_data: List[str] = os.listdir(folder)
             if len(img_data) != 3:
                 for j in range(len(img_data)):
@@ -147,7 +152,6 @@ class Downloader:
                         band: str = os.path.join(path_to_folders, img_data[z])
                         temp_band_folder: str = os.path.join(destination, files[i], img_data[z])
                         copyfile(band, temp_band_folder)
-            logger.info(f"Moved {i + 1} file.")
         logger.info("Band exclusion complete.")
 
     @staticmethod
@@ -299,7 +303,6 @@ class Downloader:
                 continue
             else:
                 break
-        # self.shared.clear_console()
 
     def _form_feature_data(self, features) -> Tuple[Dict[str, Any], Union[int, float], int]:
         feature_info: Dict[str, Any] = {}

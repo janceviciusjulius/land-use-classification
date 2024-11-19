@@ -25,6 +25,8 @@ opencv-python = "*"
 scikit-learn = "*"
 tf-keras = "*"
 keras = "*"
+tqdm = "*"
+xgboost = "*"
 
 [dev-packages]
 black = "*"

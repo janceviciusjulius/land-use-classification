@@ -29,6 +29,7 @@ def download_algorithm():
     merge.process_data()
 
 
+
 def join_algorithm():
     shared: Shared = Shared()
     join: Join = Join(shared=shared)
@@ -36,7 +37,6 @@ def join_algorithm():
 
 
 def classification_algorithm():
-    print("OPA")
     shared: Shared = Shared()
     classification: Classification = Classification(shared=shared)
     classification.classify()

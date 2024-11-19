@@ -10,6 +10,7 @@ from zipfile import BadZipfile, ZipFile
 
 from loguru import logger
 from scipy.constants import value
+from tqdm import tqdm
 
 from schema.algorithm import Algorithm
 from schema.constants import Constants
@@ -35,12 +36,13 @@ class Shared:
             raise ValueError("No files to unzip.")
 
         logger.info(f"Data unzipping begins. Number of files: {len(files)}")
-        for index, file in enumerate(files):
+        pbar: tqdm = tqdm(files, desc="Unzipping data", unit="Package")
+        for index, file in enumerate(pbar):
+            pbar.set_description(f"Unzipping {index+1} file")
             try:
-                temp_file_path = os.path.join(source, file)
+                temp_file_path = os.path.join(source, str(file))
                 with ZipFile(temp_file_path, "r") as zip_ref:
                     zip_ref.extractall(destination)
-                logger.info(f"Successfully unzipped {index + 1} file")
             except BadZipfile:
                 logger.error(f"Due to downloaded file problem {index + 1} file is skipped.")
                 continue
@@ -128,14 +130,14 @@ class Shared:
 
     def _convert_json_to_enum(self, data, param_enum, folder_enum):
         result = {}
-        for key, value in data.items():
-            new_key = self.convert_key_to_enum(key, param_enum)
-            if isinstance(value, dict):
+        for key_, value_ in data.items():
+            new_key = self.convert_key_to_enum(key_, param_enum)
+            if isinstance(value_, dict):
                 if new_key == param_enum.FOLDERS:
-                    value = self._convert_json_to_enum(value, folder_enum, folder_enum)
+                    value_ = self._convert_json_to_enum(value_, folder_enum, folder_enum)
                 else:
-                    value = self._convert_json_to_enum(value, param_enum, folder_enum)
-            result[new_key] = value
+                    value_ = self._convert_json_to_enum(value_, param_enum, folder_enum)
+            result[new_key] = value_
         return result
 
     @staticmethod

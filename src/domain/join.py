@@ -8,16 +8,18 @@ from osgeo.ogr import DataSource, Layer
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
 from schema.algorithm import Algorithm
-from schema.constants import Constants
+from schema.constants import Constants, ConstantValues
 from schema.cropping_choice import CroppingChoice
 from schema.file_types import FileType
 from schema.folder_types import FolderType
+from schema.formats import Format
 from schema.metadata_types import ParametersJson
 
 configurate_logger()
 
 
 class Join:
+    CREATION_OPTIONS: List[str] = ["COMPRESS=DEFLATE", "BIGTIFF=YES"]
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
@@ -43,11 +45,12 @@ class Join:
         elif self.cropping_choice == CroppingChoice.OBJECT:
             shp_schema: List[str] = self._get_keys_from_shp()
             key_index = self.shared.select_from_list_ui(objects=shp_schema)
-            attribute_name: str = '"' + shp_schema[key_index] + '"'
+            attribute_name: str = Constants.QUOTE + shp_schema[key_index] + Constants.QUOTE
             self._input_info()
             attribute_value: str = self.shared.ask_for_input()
 
-            self.result_file_name: str = self.result_file_name + Constants.SPACE + attribute_value.replace("'", "")
+            self.result_file_name: str = (self.result_file_name + Constants.SPACE +
+                                          attribute_value.replace(Constants.SMALL_QUOTE, Constants.EMPTY_STRING))
             self.result_file_name: str = self.shared.add_file_ext(file_name=self.result_file_name, ext=FileType.TIFF)
             self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
             self.shared.check_if_file_exists(path=self.result_file_path)
@@ -82,12 +85,12 @@ class Join:
         gdal.Warp(
             self.result_file_path,
             self.files,
-            format="GTiff",
+            format=Format.GTIFF,
             options=gdal.WarpOptions(
-                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],  # "TILED=YES"
+                creationOptions=self.CREATION_OPTIONS,  # "TILED=YES"
                 cropToCutline=True,
                 callback=self.shared.progress_cb,
-                callback_data=".",
+                callback_data=Constants.DOT,
             ),
         )
 
@@ -95,14 +98,14 @@ class Join:
         gdal.Warp(
             self.result_file_path,
             self.files,
-            format="GTiff",
+            format=Format.GTIFF,
             options=gdal.WarpOptions(
-                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],  # "TILED=YES"
+                creationOptions=self.CREATION_OPTIONS,  # "TILED=YES"
                 cutlineDSName=self.shape_file,
                 cropToCutline=True,
                 cutlineWhere=clause,
                 callback=self.shared.progress_cb,
-                callback_data=".",
+                callback_data=Constants.DOT,
             ),
         )
 
@@ -110,14 +113,14 @@ class Join:
         gdal.Warp(
             self.result_file_path,
             self.files,
-            format="GTiff",
+            format=Format.GTIFF,
             options=gdal.WarpOptions(
-                creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],  # "TILED=YES"
+                creationOptions=self.CREATION_OPTIONS,  # "TILED=YES"
                 cutlineDSName=self.shape_file,
-                dstNodata=0,
+                dstNodata=ConstantValues.NO_DATA,
                 cropToCutline=True,
                 callback=self.shared.progress_cb,
-                callback_data=".",
+                callback_data=Constants.DOT,
             ),
         )
 
