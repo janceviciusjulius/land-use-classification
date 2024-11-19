@@ -8,6 +8,7 @@ class FileType(str, Enum):
     GPKG = ".gpkg"
     SHP = ".shp"
     PKL = ".pkl"
+    PNG = ".png"
 
     MTD = "MTD"
 

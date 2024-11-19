@@ -1,0 +1,24 @@
+APRIL
+Accuracy on the test set: 99.98%
+Precision on the test set: 99.98%
+Recall on the test set: 99.98%
+F1-score on the test set: 99.98%
+Cohen's Kappa on the test set: 99.97
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_April.pkl
+------------------------------------------------------
+MAY
+Accuracy on the test set: 99.99%
+Precision on the test set: 99.99%
+Recall on the test set: 99.99%
+F1-score on the test set: 99.99%
+Cohen's Kappa on the test set: 99.99
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_May.pkl
+------------------------------------------------------
+JULY
+Accuracy on the test set: 99.92%
+Precision on the test set: 99.92%
+Recall on the test set: 99.92%
+F1-score on the test set: 99.91%
+Cohen's Kappa on the test set: 99.89
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_July.pkl
+------------------------------------------------------

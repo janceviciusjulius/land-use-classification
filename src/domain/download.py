@@ -18,11 +18,14 @@ from tqdm import tqdm
 from additional.cdse import CDSE
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
+from schema.constants import Constants
 from schema.downloader_info import DownloadInfo
+from schema.feature_fields import FeatureFields
 from schema.file_types import FileType
 from schema.folder_types import FolderType
 from schema.metadata_types import CloudCoverageJson, Metadata
 from schema.s2_package_content import PackageContent
+from schema.unit_type import UnitType
 from schema.yes_no import YesNo
 
 configurate_logger()
@@ -30,6 +33,7 @@ load_dotenv()
 
 
 class Downloader:
+    LT_LOCATION: List[float] = [54.90942, 23.91456]
     SENTINEL_COLLECTION: str = "Sentinel2"
     SENTINEL_PROCESSING_LEVEL: str = "S2MSI2A"
     B_to_GB: int = 1024 * 1024 * 1024
@@ -119,7 +123,7 @@ class Downloader:
     @staticmethod
     def _unpack_s2_bands(source, destination):
         files: List[str] = os.listdir(source)
-        pbar: tqdm = tqdm(range(len(files)), desc="Unpacking S2 bands", unit="package")
+        pbar: tqdm = tqdm(range(len(files)), desc="Unpacking S2 bands", unit=UnitType.PACKAGE)
         for i in pbar:
             pbar.set_description(f"Unpacking {i+1} file")
             temp_band_folder: str = os.path.join(destination, files[i])
@@ -128,12 +132,11 @@ class Downloader:
             dir_path: str = os.path.join(source, files[i])
             dir_files: List[str] = os.listdir(dir_path)
             for dir_file in dir_files:
-                if dir_file.startswith("MTD") and dir_file.endswith(FileType.XML):
+                if dir_file.startswith(FileType.MTD) and dir_file.endswith(FileType.XML):
                     copyfile(
                         os.path.join(dir_path, dir_file),
                         os.path.join(temp_band_folder, dir_file),
                     )
-            # End of XML part
             folder: str = os.path.join(source, files[i], PackageContent.GRANULE)
             data_name: List[str] = os.listdir(folder)
             folder: str = os.path.join(folder, data_name[0], PackageContent.IMG_DATA)
@@ -169,46 +172,45 @@ class Downloader:
         path: str = os.path.join(self.folders[FolderType.PARENT], self.shared.INFORMATION_FILENAME)
         data: Dict[str, Any] = {}
         for feature in features:
-            title: str = features[feature]["Title"]
+            title: str = features[feature][FeatureFields.TITLE]
             interval: str = f"{self.start_date}..{self.end_date}"
             data[title] = {
-                CloudCoverageJson.TITLE: features[feature]["Title"],
-                CloudCoverageJson.CLOUD: features[feature]["CloudCover"],
-                CloudCoverageJson.DATE: features[feature]["Date"],
+                CloudCoverageJson.TITLE: features[feature][FeatureFields.TITLE],
+                CloudCoverageJson.CLOUD: features[feature][FeatureFields.CLOUD_COVER],
+                CloudCoverageJson.DATE: features[feature][FeatureFields.DATE],
                 CloudCoverageJson.INTERVAL: interval,
-                CloudCoverageJson.TILE: title.split("_")[5],
+                CloudCoverageJson.TILE: title.split(Constants.UNDERSCORE)[5],
             }
         self.shared.dumb_to_json(path=path, data=data)
         logger.info("Downloaded data cloud information successfully saved.")
         return path
 
-    @staticmethod
-    def _create_image_for_area_covered(search_result: Dict[str, Any], dir_path: str) -> None:
+    def _create_image_for_area_covered(self, search_result: Dict[str, Any], dir_path: str) -> None:
         logger.info("Checking images areas. Creating image...")
         data: List[str] = []
         for index, (key, value) in enumerate(search_result.items()):
-            coordinate: Any = value.get("Coordinates")[0]
+            coordinate: Any = value.get(FeatureFields.COORDINATES)[0]
             polygon_wkt: str = f"POLYGON (({' ,'.join(f'{x} {y}' for x, y in coordinate)}))"
             data.append(polygon_wkt)
 
-        df: DataFrame = DataFrame(data, columns=["geometry"])
-        df["geometry"] = df["geometry"].apply(wkt.loads)
+        df: DataFrame = DataFrame(data, columns=[FeatureFields.GEOMETRY])
+        df[FeatureFields.GEOMETRY] = df[FeatureFields.GEOMETRY].apply(wkt.loads)
         gdf: GeoDataFrame = GeoDataFrame(df, crs="epsg:4326")
         try:
-            m: Map = Map(location=[54.90942, 23.91456], zoom_start=7, tiles="CartoDB positron")
+            m: Map = Map(location=self.LT_LOCATION, zoom_start=7, tiles=Constants.TILES)
             for _, r in gdf.iterrows():
-                sim_geo: GeoSeries | str = GeoSeries(r["geometry"]).simplify(tolerance=0.000001)
+                sim_geo: GeoSeries | str = GeoSeries(r[FeatureFields.GEOMETRY]).simplify(tolerance=0.000001)
                 geo_j = sim_geo.to_json()
                 geo_j: GeoJson = GeoJson(data=geo_j, style_function=lambda x: {"fillColor": "orange"})
                 geo_j.add_to(m)
             img_data = m._to_png(1)
             img: Image = Image.open(BytesIO(img_data))
-            img.save(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
-            img.show(os.path.join(dir_path, os.path.basename(dir_path + ".png")))
+            img.save(os.path.join(dir_path, os.path.basename(dir_path + FileType.PNG)))
+            img.show(os.path.join(dir_path, os.path.basename(dir_path + FileType.PNG)))
             logger.info("Image saved successfully.")
-            if os.path.isfile("geckodriver.log"):
+            if os.path.isfile(Constants.GECKO_DRIVER):
                 try:
-                    os.remove("geckodriver.log")
+                    os.remove(Constants.GECKO_DRIVER)
                 except PermissionError:
                     pass
         except Exception:
@@ -310,20 +312,26 @@ class Downloader:
         online_num: int = 0
 
         for index, feature in enumerate(features):
-            if feature["properties"]["status"].lower() == "online":
+            if feature[FeatureFields.PROPERTIES][FeatureFields.STATUS].lower() == FeatureFields.ONLINE:
                 online_num += 1
 
-            title = feature["properties"]["title"]
-            feature_size = round(feature["properties"]["services"]["download"]["size"] / self.B_to_GB, 2)
+            title = feature[FeatureFields.PROPERTIES][FeatureFields.TITLE_S]
+            feature_size = round(
+                (feature[FeatureFields.PROPERTIES][FeatureFields.SERVICES][FeatureFields.DOWNLOAD][FeatureFields.SIZE])
+                / self.B_to_GB,
+                2,
+            )
             general_size += feature_size
             feature_info[title] = {
                 "Title": title,
-                "Date": feature["properties"]["startDate"][:10].replace("-", ""),
-                "Status": feature["properties"]["status"],
+                "Date": feature[FeatureFields.PROPERTIES][FeatureFields.START_DATE][:10].replace(
+                    Constants.MINUS, Constants.EMPTY_STRING
+                ),
+                "Status": feature[FeatureFields.PROPERTIES][FeatureFields.STATUS],
                 "Size": feature_size,
-                "CloudCover": round(feature["properties"]["cloudCover"], 2),
-                "Coordinates": feature["geometry"]["coordinates"],
-                "QMLGeometry": feature["properties"]["gmlgeometry"],
+                "CloudCover": round(feature[FeatureFields.PROPERTIES][FeatureFields.CLOUD_COVER_S], 2),
+                "Coordinates": feature[FeatureFields.GEOMETRY][FeatureFields.COORDINATES_S],
+                "QMLGeometry": feature[FeatureFields.PROPERTIES][FeatureFields.QMLGEO],
             }
 
         return feature_info, round(general_size, 2), online_num

@@ -49,8 +49,11 @@ class Join:
             self._input_info()
             attribute_value: str = self.shared.ask_for_input()
 
-            self.result_file_name: str = (self.result_file_name + Constants.SPACE +
-                                          attribute_value.replace(Constants.SMALL_QUOTE, Constants.EMPTY_STRING))
+            self.result_file_name: str = (
+                self.result_file_name
+                + Constants.SPACE
+                + attribute_value.replace(Constants.SMALL_QUOTE, Constants.EMPTY_STRING)
+            )
             self.result_file_name: str = self.shared.add_file_ext(file_name=self.result_file_name, ext=FileType.TIFF)
             self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
             self.shared.check_if_file_exists(path=self.result_file_path)

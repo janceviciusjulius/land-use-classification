@@ -10,8 +10,13 @@ class Constants(str, Enum):
     ACCURACIES_FILE = "models_accuracies.txt"
     QUOTE = '"'
     SMALL_QUOTE = "'"
+    UNDERSCORE = "_"
+    MINUS = "-"
 
     STICKY = "ew"
+
+    TILES = "CartoDB positron"
+    GECKO_DRIVER = "geckodriver.log"
 
     def __str__(self) -> str:
         return self.value

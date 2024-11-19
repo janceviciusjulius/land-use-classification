@@ -1,40 +1,46 @@
 import os.path
 import pickle
 import re
-import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 from loguru import logger
 from osgeo import gdal
+from osgeo.gdal import Dataset, Driver
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
 from exceptions.exceptions import MonthExtractionException
+from schema.accuracy_metrics import AccuracyMetrics
 from schema.algorithm import Algorithm
 from schema.columns import DataColumns, LabelColumn
 from schema.constants import Constants
 from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderType
+from schema.formats import Format
 from schema.library_type import LibraryType
 from schema.metadata_types import ParametersJson
 from schema.months import Month
+from schema.reading_types import ReadingType
 from schema.regexes import Regex
 from schema.root_folders import RootFolders
+from schema.unit_type import UnitType
 from schema.yes_no import YesNo
 
 configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 100
-    ESTIMATORS: int = 100
+    MAX_DEPTH: int = 10
+    ESTIMATORS: int = 10
     N_JOBS: int = -1
+    NO_DATA_VALUE: int = 0
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
@@ -43,14 +49,16 @@ class Classification:
         self.folders: Dict[FolderType, str] = self.parameters[ParametersJson.FOLDERS]
         self.models: Dict[Month, str] = {}
 
-    def classify(self):
+    def classify(self) -> None:
         if self._ask_for_relearning():
             self._train_and_save_model()
 
         self.models = self._get_model_paths()
         self.shared.create_folder(path=self.folders[FolderType.CLASSIFIED])
 
-        for index, file in enumerate(self.files):
+        pbar: tqdm = tqdm(self.files, unit=UnitType.FILE)
+        for index, file in enumerate(pbar):
+            pbar.set_description(f"Classifying {index+1} image")
             file_name: str = os.path.basename(file)
             file_month: int = self._get_month(file_name=file_name)
             output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
@@ -59,34 +67,41 @@ class Classification:
             month_enum: Month = month_map[file_month]
             model = self._load_model(month=month_enum)
 
-            ds = gdal.Open(file, gdal.GA_ReadOnly)
-            rows = ds.RasterYSize
-            cols = ds.RasterXSize
-            bands = ds.RasterCount
-            geo_transform = ds.GetGeoTransform()
-            proj = ds.GetProjectionRef()
-            array = ds.ReadAsArray().astype("int16")
-            ds = None
+            ds: Any = gdal.Open(file, gdal.GA_ReadOnly)
+            rows: int = ds.RasterYSize
+            cols: int = ds.RasterXSize
+            bands: int = ds.RasterCount
+            geo_transform: Any = ds.GetGeoTransform()
+            proj: Any = ds.GetProjectionRef()
+            array: np.array = ds.ReadAsArray().astype(ReadingType.INT16)
+            ds: None = None
 
-            array = np.stack(array, axis=2)
-            array = np.reshape(array, [rows * cols, bands])
+            array: np.array = np.stack(array, axis=2)
+            array: np.array = np.reshape(array, [rows * cols, bands])
 
-            classification_SVM = model.predict(array)
-            classification_SVM = classification_SVM.reshape((rows, cols))
-            print(array, classification_SVM)
-            classification_SVM[array[0] == 0] = 0
-            self._createGeotiff(outRaster=output_path, dataG=classification_SVM, transform=geo_transform, proj=proj)
-            logger.info(f"Successfully classified {index} file.")
-            # TODO: FINISH WITH MASK CLOUD FOR 0 finding from input and output.
+            class_result: np.array = model.predict(array)
+            class_result: np.array = class_result.reshape((rows, cols))
+
+            class_result: np.array = self._remove_clouds(input_file=file, class_result=class_result)
+            self._createGeotiff(outRaster=output_path, dataG=class_result, transform=geo_transform, proj=proj)
+        return None
 
     @staticmethod
-    def _createGeotiff(outRaster, dataG, transform, proj):
-        driver = gdal.GetDriverByName("GTiff")
+    def _remove_clouds(input_file: str, class_result: np.array) -> np.array:
+        test_raster: Any = gdal.Open(input_file, gdal.GA_ReadOnly)
+        band_1: Any = test_raster.GetRasterBand(1)
+        band_1_array: np.array = band_1.ReadAsArray().astype(ReadingType.INT16)
+        class_result[band_1_array == 0] = 0
+        return class_result
+
+    def _createGeotiff(self, outRaster, dataG, transform, proj):
+        driver: Driver = gdal.GetDriverByName(Format.GTIFF)
         rowsG, colsG = dataG.shape
-        rasterDS = driver.Create(outRaster, colsG, rowsG, 1, gdal.GDT_Byte)
+        rasterDS: Optional[Dataset] = driver.Create(outRaster, colsG, rowsG, 1, gdal.GDT_Byte)
         rasterDS.SetGeoTransform(transform)
         rasterDS.SetProjection(proj)
-        band = rasterDS.GetRasterBand(1)
+        band: Any = rasterDS.GetRasterBand(1)
+        band.SetNoDataValue(self.NO_DATA_VALUE)
         band.WriteArray(dataG)
         rasterDS = None
 
@@ -122,13 +137,11 @@ class Classification:
                             group_libraries[month][library_type] = library
         return {key: value for key, value in group_libraries.items() if value and len(value) == 2}
 
-
     def _train_and_save_model(self) -> None:
         self._initialize_file()
         all_libraries: List[str] = self.shared.list_dir(dir_=self.shared.root_folders[RootFolders.LEARNING_FOLDER])
 
         grouped_libraries: Dict[Month, Dict[LibraryType, str]] = self._group_libraries(all_libraries=all_libraries)
-        print(grouped_libraries)
         for month, libraries_info in grouped_libraries.items():
             train_library: str = libraries_info[LibraryType.TRAIN]
             validation_library: str = libraries_info[LibraryType.VALIDATION]
@@ -156,13 +169,13 @@ class Classification:
                 max_depth=self.MAX_DEPTH,
             )
             clf.fit(X_train, y_train)
-            y_pred_test = clf.predict(X_test)
+            y_pred_test: np.array = clf.predict(X_test)
 
-            accuracy = accuracy_score(y_test, y_pred_test)
-            precision = precision_score(y_test, y_pred_test, average="weighted")
-            recall = recall_score(y_test, y_pred_test, average="weighted")
-            f1 = f1_score(y_test, y_pred_test, average="weighted")
-            kappa = cohen_kappa_score(y_test, y_pred_test)
+            accuracy: float | int = accuracy_score(y_test, y_pred_test)
+            precision: float | int = precision_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
+            recall: float | int = recall_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
+            f1: float | int = f1_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
+            kappa: float | int = cohen_kappa_score(y_test, y_pred_test)
 
             accuracy_result: str = f"Accuracy on the test set: {accuracy * 100:.2f}%"
             logger.info(accuracy_result)
@@ -211,7 +224,6 @@ class Classification:
                 return pickle.load(file)
         except (FileNotFoundError, pickle.UnpicklingError) as error:
             logger.error(f"{error.__class__.__name__} on {str(month)} model.")
-
 
     @staticmethod
     def _month_map() -> Dict[int, Month]:

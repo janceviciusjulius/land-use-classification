@@ -29,7 +29,6 @@ def download_algorithm():
     merge.process_data()
 
 
-
 def join_algorithm():
     shared: Shared = Shared()
     join: Join = Join(shared=shared)

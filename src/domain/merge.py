@@ -17,7 +17,9 @@ from schema.band_types import AddBandType, BandType
 from schema.file_modes import FileMode
 from schema.file_types import FileType
 from schema.folder_types import FolderType
+from schema.formats import Format
 from schema.metadata_types import CloudCoverageJson, Metadata
+from schema.reading_types import ReadingType
 from schema.tile_types import TileType
 
 
@@ -89,21 +91,21 @@ class Merge:
             NDTI: Optional[ndarray] = nan_to_num(NDTI)
             NDTI: Optional[ndarray] = around(NDTI, decimals=4)
             NDTI: Optional[ndarray] = NDTI * 10000
-            NDTI: Optional[ndarray] = NDTI.astype("int16")
+            NDTI: Optional[ndarray] = NDTI.astype(ReadingType.INT16)
             write_NDTI.WriteArray(NDTI)
 
             NDVIre: Optional[ndarray] = (band5 - band4) / (band5 + band4)
             NDVIre: Optional[ndarray] = nan_to_num(NDVIre)
             NDVIre: Optional[ndarray] = around(NDVIre, decimals=4)
             NDVIre: Optional[ndarray] = NDVIre * 10000
-            NDVIre: Optional[ndarray] = NDVIre.astype("int16")
+            NDVIre: Optional[ndarray] = NDVIre.astype(ReadingType.INT16)
             write_NDVIre.WriteArray(NDVIre)
 
             MNDWI: Optional[ndarray] = (band3 - band11) / (band3 + band11)
             MNDWI: Optional[ndarray] = nan_to_num(MNDWI)
             MNDWI: Optional[ndarray] = around(MNDWI, decimals=4)
             MNDWI: Optional[ndarray] = MNDWI * 10000
-            MNDWI: Optional[ndarray] = MNDWI.astype("int16")
+            MNDWI: Optional[ndarray] = MNDWI.astype(ReadingType.INT16)
             write_MNDWI.WriteArray(MNDWI)
 
             raster, band3, band4, band5, band11, band12 = (
@@ -132,13 +134,13 @@ class Merge:
                     if len(image_details) > 1:
                         for index, details in enumerate(image_details[1:]):
                             best_raster: Optional[Dataset] = gdal.Open(image_details[0][CloudCoverageJson.FILENAME], 1)
-                            best_raster_array: Any = best_raster.ReadAsArray().astype("int16")
+                            best_raster_array: Any = best_raster.ReadAsArray().astype(ReadingType.INT16)
                             mask = best_raster_array == 0
                             if mask.all():
                                 break
                             interpolation_raster: Optional[Dataset] = gdal.Open(details[CloudCoverageJson.FILENAME], 1)
                             interpolation_raster_array: Optional[ndarray] = interpolation_raster.ReadAsArray().astype(
-                                "int16"
+                                ReadingType.INT16
                             )
 
                             best_raster_array[mask] = interpolation_raster_array[mask]
@@ -165,7 +167,6 @@ class Merge:
             new_filename: str = f"{interval} {tile}{FileType.TIFF.value}"
             new_filename_path = os.path.join(os.path.dirname(filename), new_filename)
             os.rename(filename, new_filename_path)
-
 
     @staticmethod
     def sort_image_info(
@@ -311,7 +312,7 @@ class Merge:
         gdal.Warp(
             destNameOrDestDS=dest,
             srcDSOrSrcDSTab=src,
-            format="GTiff",
+            format=Format.GTIFF,
             options=gdal.WarpOptions(
                 creationOptions=["COMPRESS=DEFLATE", "TILED=YES"],
                 xRes=res,
@@ -325,7 +326,7 @@ class Merge:
         gdal.Warp(
             output_file_path,
             input_file_path,
-            format="GTiff",
+            format=Format.GTIFF,
             options=gdal.WarpOptions(
                 creationOptions=["COMPRESS=DEFLATE", "BIGTIFF=YES"],
                 cropToCutline=True,
@@ -366,10 +367,6 @@ class Merge:
 
                     first_band = where(isin(mask_band, values_to_check), 0, first_band)
                     first_band[first_band == 1] = 0
-
-                    # Convert to a supported data type (e.g., uint16)
-                    # if first_band.dtype == "float32":
-                    #     first_band = first_band.astype(np.int16)
 
                     modified_layers.append(first_band)
 
