@@ -13,7 +13,7 @@ from schema.names import Name
 gdal.UseExceptions()
 
 
-def download_algorithm():
+def download_algorithm() -> None:
     shared: Shared = Shared()
     downloader: Downloader = Downloader(shared=shared)
     downloader.download_data()
@@ -27,18 +27,21 @@ def download_algorithm():
         files=downloader.files,
     )
     merge.process_data()
+    return None
 
 
-def join_algorithm():
+def join_algorithm() -> None:
     shared: Shared = Shared()
     join: Join = Join(shared=shared)
     join.join()
+    return None
 
 
-def classification_algorithm():
+def classification_algorithm() -> None:
     shared: Shared = Shared()
     classification: Classification = Classification(shared=shared)
     classification.classify()
+    return None
 
 
 def main_page():

@@ -11,6 +11,7 @@ class FolderType(str, Enum):
     CLOUD = "CLOUD"
     JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
+    CONFIDENCE = "CONFIDENCE"
 
     def __str__(self) -> str:
         return self.value
@@ -25,6 +26,7 @@ class FolderPrefix(str, Enum):
     CLOUD = "CLOUD"
     JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
+    CONFIDENCE = "CONFIDENCE"
 
     def __str__(self) -> str:
         return self.value

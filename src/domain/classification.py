@@ -1,7 +1,7 @@
 import os.path
 import pickle
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -37,8 +37,8 @@ configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 10
-    ESTIMATORS: int = 10
+    MAX_DEPTH: int = 5
+    ESTIMATORS: int = 5
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
@@ -67,6 +67,7 @@ class Classification:
             month_enum: Month = month_map[file_month]
             model = self._load_model(month=month_enum)
 
+            # TODO: Finish with Confidence Map
             ds: Any = gdal.Open(file, gdal.GA_ReadOnly)
             rows: int = ds.RasterYSize
             cols: int = ds.RasterXSize
@@ -126,7 +127,8 @@ class Classification:
                 return False
             self.shared.clear_console()
 
-    def _group_libraries(self, all_libraries: List[str]) -> Dict[Month, Dict[LibraryType, str]]:
+    @staticmethod
+    def _group_libraries(all_libraries: List[str]) -> Dict[Month, Dict[LibraryType, str]]:
         group_libraries: Dict[Month, Dict[LibraryType, str]] = {month: {} for month in Month}
         for library in all_libraries:
             library_name: str = os.path.basename(library)
@@ -189,8 +191,9 @@ class Classification:
             logger.info(kappa_result)
 
             path_info: str = f"Model saved to: {model_path}"
+            general_info: str = f"{month.value.upper()} with ESTIMATORS: {self.ESTIMATORS} MAX_DEPTH: {self.MAX_DEPTH}"
             messages: List[str] = [
-                month.value.upper(),
+                general_info,
                 accuracy_result,
                 precision_result,
                 recall_result,
@@ -231,9 +234,8 @@ class Classification:
 
     @staticmethod
     def _get_month(file_name: str) -> int:
-        match = re.search(Regex.DATE_REGEX, file_name)
-        if match:
-            file_month = match.group(2)
-            return int(file_month)
-        else:
-            raise MonthExtractionException(f"Cannot extract month from {file_name}")
+        for regex in Regex:
+            match = re.search(regex, file_name)
+            if match:
+                return int(match.group(2))
+        raise MonthExtractionException(f"Cannot extract month from {file_name}")
