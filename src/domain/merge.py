@@ -70,6 +70,7 @@ class Merge:
         self._cloud_interpolation()
         self._count_indexes()
         self.shared.delete_folder(self.folders[FolderType.MERGED])
+        logger.warning("End of merge process.")
 
     def _count_indexes(self):
         logger.info("Starting index counting process.")
@@ -147,7 +148,7 @@ class Merge:
                             best_raster.WriteArray(best_raster_array)
 
                             best_raster, best_raster_array = None, None
-                            interpolation_raster, interpolation_raster_array = (None,None)
+                            interpolation_raster, interpolation_raster_array = (None, None)
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
                         tile=image_details[0][CloudCoverageJson.TILE],

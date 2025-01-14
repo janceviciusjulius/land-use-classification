@@ -118,6 +118,7 @@ class Downloader:
         class_variables: Dict[str, Any] = self.shared.to_dict(cls_obj=self)
 
         self.shared.dumb_to_json(path=json_file_path, data=class_variables)
+        logger.warning("End of data downloading phase")
         return json_file_path
 
     @staticmethod

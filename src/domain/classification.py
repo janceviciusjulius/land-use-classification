@@ -10,7 +10,8 @@ from osgeo import gdal
 from osgeo.gdal import Dataset, Driver
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+from sklearn.metrics import (accuracy_score, cohen_kappa_score, f1_score,
+                             precision_score, recall_score)
 from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
@@ -37,8 +38,8 @@ configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 5
-    ESTIMATORS: int = 5
+    MAX_DEPTH: int = 3
+    ESTIMATORS: int = 3
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
@@ -55,13 +56,17 @@ class Classification:
 
         self.models = self._get_model_paths()
         self.shared.create_folder(path=self.folders[FolderType.CLASSIFIED])
+        self.shared.create_folder(path=self.folders[FolderType.CONFIDENCE])
 
         pbar: tqdm = tqdm(self.files, unit=UnitType.FILE)
         for index, file in enumerate(pbar):
             pbar.set_description(f"Classifying {index+1} image")
-            file_name: str = os.path.basename(file)
+            file_name: str = os.path.basename(str(file))
             file_month: int = self._get_month(file_name=file_name)
             output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
+
+            # TODO: Finish name setting with a function
+            conf_output_path: str = os.path.join(self.folders[FolderType.CONFIDENCE], f"Confidence_{file_name}")
 
             month_map: Dict[int, Month] = self._month_map()
             month_enum: Month = month_map[file_month]
@@ -72,7 +77,7 @@ class Classification:
             rows: int = ds.RasterYSize
             cols: int = ds.RasterXSize
             bands: int = ds.RasterCount
-            geo_transform: Any = ds.GetGeoTransform()
+            geo_trans: Any = ds.GetGeoTransform()
             proj: Any = ds.GetProjectionRef()
             array: np.array = ds.ReadAsArray().astype(ReadingType.INT16)
             ds: None = None
@@ -81,10 +86,21 @@ class Classification:
             array: np.array = np.reshape(array, [rows * cols, bands])
 
             class_result: np.array = model.predict(array)
-            class_result: np.array = class_result.reshape((rows, cols))
+            probabilities: np.array = model.predict_proba(array)
+            confidence: np.array = np.max(probabilities, axis=1)
 
-            class_result: np.array = self._remove_clouds(input_file=file, class_result=class_result)
-            self._createGeotiff(outRaster=output_path, dataG=class_result, transform=geo_transform, proj=proj)
+            class_result: np.array = class_result.reshape((rows, cols))
+            confidence: np.array = confidence.reshape((rows, cols))
+
+            class_result: np.array = self._remove_clouds(input_file=str(file), class_result=class_result)
+            confidence: np.array = self._remove_clouds(input_file=str(file), class_result=confidence)
+            confidence: np.array = np.round(confidence, decimals=2)
+
+            self._createGeotiff(outRaster=output_path, dataG=class_result, transform=geo_trans, proj=proj)
+            self._createGeotiff(
+                outRaster=conf_output_path, dataG=confidence, transform=geo_trans, proj=proj, data_type=gdal.GDT_Float32
+            )
+        logger.warning("End of classification process.")
         return None
 
     @staticmethod
@@ -95,10 +111,12 @@ class Classification:
         class_result[band_1_array == 0] = 0
         return class_result
 
-    def _createGeotiff(self, outRaster, dataG, transform, proj):
+    def _createGeotiff(
+        self, outRaster: str, dataG: np.array, transform: Any, proj: Any, data_type: int = gdal.GDT_Byte
+    ):
         driver: Driver = gdal.GetDriverByName(Format.GTIFF)
         rowsG, colsG = dataG.shape
-        rasterDS: Optional[Dataset] = driver.Create(outRaster, colsG, rowsG, 1, gdal.GDT_Byte)
+        rasterDS: Optional[Dataset] = driver.Create(outRaster, colsG, rowsG, 1, data_type)
         rasterDS.SetGeoTransform(transform)
         rasterDS.SetProjection(proj)
         band: Any = rasterDS.GetRasterBand(1)

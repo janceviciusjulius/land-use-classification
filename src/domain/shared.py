@@ -260,6 +260,7 @@ class Shared:
             FolderType.CLOUD: FolderPrefix.CLOUD,
             FolderType.JOINED: FolderPrefix.JOINED,
             FolderType.CLASSIFIED: FolderPrefix.CLASSIFIED,
+            FolderType.CONFIDENCE: FolderPrefix.CONFIDENCE,
         }
 
         main_folder_name = self.generate_folder_name(start_date, end_date, cloud_cover)
