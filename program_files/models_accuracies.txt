@@ -1,24 +1,56 @@
 APRIL with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 79.05%
-Precision on the test set: 70.09%
-Recall on the test set: 79.05%
-F1-score on the test set: 72.31%
-Cohen's Kappa on the test set: 73.90
+Accuracy on the test set: 78.44%
+Precision on the test set: 85.65%
+Recall on the test set: 78.44%
+F1-score on the test set: 74.00%
+Cohen's Kappa on the test set: 73.24%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_April.pkl
 ------------------------------------------------------
 MAY with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 79.80%
-Precision on the test set: 75.96%
-Recall on the test set: 79.80%
-F1-score on the test set: 73.47%
-Cohen's Kappa on the test set: 74.46
+Accuracy on the test set: 65.50%
+Precision on the test set: 65.67%
+Recall on the test set: 65.50%
+F1-score on the test set: 58.65%
+Cohen's Kappa on the test set: 59.02%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_May.pkl
 ------------------------------------------------------
+JUNE with ESTIMATORS: 3 MAX_DEPTH: 3
+Accuracy on the test set: 83.67%
+Precision on the test set: 86.25%
+Recall on the test set: 83.67%
+F1-score on the test set: 82.03%
+Cohen's Kappa on the test set: 80.30%
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_June.pkl
+------------------------------------------------------
 JULY with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 95.02%
-Precision on the test set: 92.87%
-Recall on the test set: 95.02%
-F1-score on the test set: 93.80%
-Cohen's Kappa on the test set: 93.43
+Accuracy on the test set: 88.45%
+Precision on the test set: 84.99%
+Recall on the test set: 88.45%
+F1-score on the test set: 85.01%
+Cohen's Kappa on the test set: 84.25%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_July.pkl
+------------------------------------------------------
+AUGUST with ESTIMATORS: 3 MAX_DEPTH: 3
+Accuracy on the test set: 72.27%
+Precision on the test set: 63.81%
+Recall on the test set: 72.27%
+F1-score on the test set: 65.92%
+Cohen's Kappa on the test set: 68.03%
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_August.pkl
+------------------------------------------------------
+SEPTEMBER with ESTIMATORS: 3 MAX_DEPTH: 3
+Accuracy on the test set: 82.83%
+Precision on the test set: 85.16%
+Recall on the test set: 82.83%
+F1-score on the test set: 83.57%
+Cohen's Kappa on the test set: 78.48%
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_September.pkl
+------------------------------------------------------
+OCTOBER with ESTIMATORS: 3 MAX_DEPTH: 3
+Accuracy on the test set: 81.70%
+Precision on the test set: 85.61%
+Recall on the test set: 81.70%
+F1-score on the test set: 79.51%
+Cohen's Kappa on the test set: 73.85%
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_October.pkl
 ------------------------------------------------------

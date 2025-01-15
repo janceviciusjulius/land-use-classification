@@ -192,10 +192,13 @@ class Classification:
             y_pred_test: np.array = clf.predict(X_test)
 
             accuracy: float | int = accuracy_score(y_test, y_pred_test)
-            precision: float | int = precision_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
+            precision: float | int = precision_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0)
             recall: float | int = recall_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
             f1: float | int = f1_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
             kappa: float | int = cohen_kappa_score(y_test, y_pred_test)
+
+            general_info: str = f"{month.value.upper()} with ESTIMATORS: {self.ESTIMATORS} MAX_DEPTH: {self.MAX_DEPTH}"
+            logger.info(general_info)
 
             accuracy_result: str = f"Accuracy on the test set: {accuracy * 100:.2f}%"
             logger.info(accuracy_result)
@@ -205,11 +208,10 @@ class Classification:
             logger.info(recall_result)
             f1_result: str = f"F1-score on the test set: {f1 * 100:.2f}%"
             logger.info(f1_result)
-            kappa_result: str = f"Cohen's Kappa on the test set: {kappa * 100:.2f}"
+            kappa_result: str = f"Cohen's Kappa on the test set: {kappa * 100:.2f}%"
             logger.info(kappa_result)
 
             path_info: str = f"Model saved to: {model_path}"
-            general_info: str = f"{month.value.upper()} with ESTIMATORS: {self.ESTIMATORS} MAX_DEPTH: {self.MAX_DEPTH}"
             messages: List[str] = [
                 general_info,
                 accuracy_result,
