@@ -1,56 +1,56 @@
-APRIL with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 78.44%
-Precision on the test set: 85.65%
-Recall on the test set: 78.44%
-F1-score on the test set: 74.00%
-Cohen's Kappa on the test set: 73.24%
+APRIL with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 94.36%
+Precision on the test set: 97.14%
+Recall on the test set: 94.36%
+F1-score on the test set: 94.95%
+Cohen's Kappa on the test set: 93.09%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_April.pkl
 ------------------------------------------------------
-MAY with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 65.50%
-Precision on the test set: 65.67%
-Recall on the test set: 65.50%
-F1-score on the test set: 58.65%
-Cohen's Kappa on the test set: 59.02%
+MAY with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 87.10%
+Precision on the test set: 91.95%
+Recall on the test set: 87.10%
+F1-score on the test set: 87.72%
+Cohen's Kappa on the test set: 84.68%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_May.pkl
 ------------------------------------------------------
-JUNE with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 83.67%
-Precision on the test set: 86.25%
-Recall on the test set: 83.67%
-F1-score on the test set: 82.03%
-Cohen's Kappa on the test set: 80.30%
+JUNE with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 82.69%
+Precision on the test set: 91.09%
+Recall on the test set: 82.69%
+F1-score on the test set: 81.73%
+Cohen's Kappa on the test set: 79.39%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_June.pkl
 ------------------------------------------------------
-JULY with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 88.45%
-Precision on the test set: 84.99%
-Recall on the test set: 88.45%
-F1-score on the test set: 85.01%
-Cohen's Kappa on the test set: 84.25%
+JULY with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 99.02%
+Precision on the test set: 99.10%
+Recall on the test set: 99.02%
+F1-score on the test set: 99.04%
+Cohen's Kappa on the test set: 98.68%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_July.pkl
 ------------------------------------------------------
-AUGUST with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 72.27%
-Precision on the test set: 63.81%
-Recall on the test set: 72.27%
-F1-score on the test set: 65.92%
-Cohen's Kappa on the test set: 68.03%
+AUGUST with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 90.80%
+Precision on the test set: 91.22%
+Recall on the test set: 90.80%
+F1-score on the test set: 90.65%
+Cohen's Kappa on the test set: 89.49%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_August.pkl
 ------------------------------------------------------
-SEPTEMBER with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 82.83%
-Precision on the test set: 85.16%
-Recall on the test set: 82.83%
-F1-score on the test set: 83.57%
-Cohen's Kappa on the test set: 78.48%
+SEPTEMBER with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 87.36%
+Precision on the test set: 96.10%
+Recall on the test set: 87.36%
+F1-score on the test set: 89.90%
+Cohen's Kappa on the test set: 84.43%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_September.pkl
 ------------------------------------------------------
-OCTOBER with ESTIMATORS: 3 MAX_DEPTH: 3
-Accuracy on the test set: 81.70%
-Precision on the test set: 85.61%
-Recall on the test set: 81.70%
-F1-score on the test set: 79.51%
-Cohen's Kappa on the test set: 73.85%
+OCTOBER with ESTIMATORS: 50 MAX_DEPTH: 25
+Accuracy on the test set: 92.84%
+Precision on the test set: 93.14%
+Recall on the test set: 92.84%
+F1-score on the test set: 91.80%
+Cohen's Kappa on the test set: 89.68%
 Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_ground_October.pkl
 ------------------------------------------------------

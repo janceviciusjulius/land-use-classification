@@ -38,8 +38,8 @@ configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 3
-    ESTIMATORS: int = 3
+    MAX_DEPTH: int = 25
+    ESTIMATORS: int = 50
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
