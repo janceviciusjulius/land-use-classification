@@ -10,8 +10,9 @@ from osgeo import gdal
 from osgeo.gdal import Dataset, Driver
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (accuracy_score, cohen_kappa_score, f1_score,
-                             precision_score, recall_score)
+from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+
+# from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
@@ -38,8 +39,8 @@ configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 25
-    ESTIMATORS: int = 50
+    MAX_DEPTH: int = 10
+    ESTIMATORS: int = 10
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
@@ -65,14 +66,13 @@ class Classification:
             file_month: int = self._get_month(file_name=file_name)
             output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
 
-            # TODO: Finish name setting with a function
-            conf_output_path: str = os.path.join(self.folders[FolderType.CONFIDENCE], f"Confidence_{file_name}")
+            confidence_file_name: str = f"Confidence {file_name}"
+            conf_output_path: str = os.path.join(self.folders[FolderType.CONFIDENCE], confidence_file_name)
 
             month_map: Dict[int, Month] = self._month_map()
             month_enum: Month = month_map[file_month]
             model = self._load_model(month=month_enum)
 
-            # TODO: Finish with Confidence Map
             ds: Any = gdal.Open(file, gdal.GA_ReadOnly)
             rows: int = ds.RasterYSize
             cols: int = ds.RasterXSize
@@ -84,6 +84,9 @@ class Classification:
 
             array: np.array = np.stack(array, axis=2)
             array: np.array = np.reshape(array, [rows * cols, bands])
+
+            # scaler = StandardScaler()
+            # array = scaler.fit_transform(array)
 
             class_result: np.array = model.predict(array)
             probabilities: np.array = model.predict_proba(array)
@@ -112,7 +115,12 @@ class Classification:
         return class_result
 
     def _createGeotiff(
-        self, outRaster: str, dataG: np.array, transform: Any, proj: Any, data_type: int = gdal.GDT_Byte
+        self,
+        outRaster: str,
+        dataG: np.array,
+        transform: Any,
+        proj: Any,
+        data_type: int = gdal.GDT_Byte,
     ):
         driver: Driver = gdal.GetDriverByName(Format.GTIFF)
         rowsG, colsG = dataG.shape
@@ -146,7 +154,9 @@ class Classification:
             self.shared.clear_console()
 
     @staticmethod
-    def _group_libraries(all_libraries: List[str]) -> Dict[Month, Dict[LibraryType, str]]:
+    def _group_libraries(
+        all_libraries: List[str],
+    ) -> Dict[Month, Dict[LibraryType, str]]:
         group_libraries: Dict[Month, Dict[LibraryType, str]] = {month: {} for month in Month}
         for library in all_libraries:
             library_name: str = os.path.basename(library)
@@ -178,26 +188,32 @@ class Classification:
             X_test: np.ndarray = test_df[[col for col in DataColumns]].values
             y_test: np.ndarray = test_df[LabelColumn.COD].values
 
+            # #
+            # scaler = StandardScaler()
+            # X_train = scaler.fit_transform(X_train)
+            # X_test = scaler.transform(X_test)
+            # #
+
             filename: str = self.shared.file_from_path(path=train_library)
             filename_without_ext: str = self.shared.remove_ext(file=filename)
             model_filename = self.shared.add_file_ext(file_name=filename_without_ext, ext=FileType.PKL)
             model_path: str = os.path.join(self.shared.root_folders[RootFolders.MODEL_FOLDER], model_filename)
 
-            clf = RandomForestClassifier(
-                n_estimators=self.ESTIMATORS,
-                n_jobs=self.N_JOBS,
-                max_depth=self.MAX_DEPTH,
-            )
+            clf = RandomForestClassifier(n_estimators=self.ESTIMATORS, n_jobs=self.N_JOBS, max_depth=self.MAX_DEPTH)
             clf.fit(X_train, y_train)
             y_pred_test: np.array = clf.predict(X_test)
 
             accuracy: float | int = accuracy_score(y_test, y_pred_test)
-            precision: float | int = precision_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0)
-            recall: float | int = recall_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
-            f1: float | int = f1_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED)
+            precision: float | int = precision_score(
+                y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0
+            )
+            recall: float | int = recall_score(
+                y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0
+            )
+            f1: float | int = f1_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0)
             kappa: float | int = cohen_kappa_score(y_test, y_pred_test)
 
-            general_info: str = f"{month.value.upper()} with ESTIMATORS: {self.ESTIMATORS} MAX_DEPTH: {self.MAX_DEPTH}"
+            general_info: str = f"{month.value.upper()} with MAX_DEPTH: {self.MAX_DEPTH} ESTIMATORS: {self.ESTIMATORS}"
             logger.info(general_info)
 
             accuracy_result: str = f"Accuracy on the test set: {accuracy * 100:.2f}%"
@@ -231,13 +247,19 @@ class Classification:
             logger.info(Constants.LINE)
 
     def _write_accuracies_to_file(self, messages: List[str]) -> None:
-        file_path: str = os.path.join(self.shared.root_folders[RootFolders.PROGRAM_FOLDER], Constants.ACCURACIES_FILE)
+        file_path: str = os.path.join(
+            self.shared.root_folders[RootFolders.PROGRAM_FOLDER],
+            Constants.ACCURACIES_FILE,
+        )
         with open(file_path, FileMode.APPEND) as file:
             for message in messages:
                 file.write(message + Constants.NEW_LINE)
 
     def _initialize_file(self) -> None:
-        file_path: str = os.path.join(self.shared.root_folders[RootFolders.PROGRAM_FOLDER], Constants.ACCURACIES_FILE)
+        file_path: str = os.path.join(
+            self.shared.root_folders[RootFolders.PROGRAM_FOLDER],
+            Constants.ACCURACIES_FILE,
+        )
         with open(file_path, FileMode.WRITE):
             pass
 

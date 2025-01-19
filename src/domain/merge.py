@@ -148,7 +148,10 @@ class Merge:
                             best_raster.WriteArray(best_raster_array)
 
                             best_raster, best_raster_array = None, None
-                            interpolation_raster, interpolation_raster_array = (None, None)
+                            interpolation_raster, interpolation_raster_array = (
+                                None,
+                                None,
+                            )
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
                         tile=image_details[0][CloudCoverageJson.TILE],
