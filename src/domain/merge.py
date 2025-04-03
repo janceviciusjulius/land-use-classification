@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 from os import listdir
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -130,7 +131,7 @@ class Merge:
                 criteria=CloudCoverageJson.CLOUD, match_images=match_images
             )
 
-            for image_details in sorted_data.values():
+            for index, image_details in enumerate(sorted_data.values()):
                 if len(image_details) > 0:
                     if len(image_details) > 1:
                         for index, details in enumerate(image_details[1:]):
@@ -148,18 +149,24 @@ class Merge:
                             best_raster.WriteArray(best_raster_array)
 
                             best_raster, best_raster_array = None, None
-                            interpolation_raster, interpolation_raster_array = (
-                                None,
-                                None,
-                            )
+                            interpolation_raster, interpolation_raster_array = None, None
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
                         tile=image_details[0][CloudCoverageJson.TILE],
                         interval=image_details[0][CloudCoverageJson.INTERVAL],
                     )
+                    logger.info(f"Image {index + 1}. Applying cloud interpolation: {image_details}")
+                logger.info(f"Image {index+1}. No other images found: {image_details}")
             logger.info("Cloud interpolation process completed successfully.")
         else:
             logger.info(f"Cloud interpolation is skipped.")
+
+        files: List[str] = os.listdir(self.folders[FolderType.CLEANED])
+        filtered_files = [
+            os.path.join(self.folders[FolderType.CLEANED], file) for file in files if re.match(r"^\d+\.", file)
+        ]
+        for file_path in filtered_files:
+            self.shared.delete_file(path=file_path)
         return
 
     @staticmethod
