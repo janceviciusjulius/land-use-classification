@@ -173,11 +173,15 @@ class Classification:
 
         grouped_libraries: Dict[Month, Dict[LibraryType, str]] = self._group_libraries(all_libraries=all_libraries)
         for month, libraries_info in grouped_libraries.items():
+            logger.info(f"Training {month}...")
             train_library: str = libraries_info[LibraryType.TRAIN]
             validation_library: str = libraries_info[LibraryType.VALIDATION]
             try:
                 train_df: DataFrame = pd.read_csv(train_library)
                 test_df: DataFrame = pd.read_csv(validation_library)
+
+                train_df = train_df.dropna()
+                test_df = test_df.dropna()
             except (FileNotFoundError, UnicodeDecodeError) as error:
                 logger.error(f"{error.__class__.__name__} on {train_library} library.")
                 logger.info(Constants.LINE)

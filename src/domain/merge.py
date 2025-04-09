@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import time
 from os import listdir
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -67,9 +68,10 @@ class Merge:
         self._create_folders()
         self._merge()
         self._set_band_names()
-        self._cleaning_data()
+        # self._cleaning_data()
         self._cloud_interpolation()
         self._count_indexes()
+        self._cleaning_data()
         self.shared.delete_folder(self.folders[FolderType.MERGED])
         logger.warning("End of merge process.")
 
@@ -156,17 +158,19 @@ class Merge:
                         interval=image_details[0][CloudCoverageJson.INTERVAL],
                     )
                     logger.info(f"Image {index + 1}. Applying cloud interpolation: {image_details}")
-                logger.info(f"Image {index+1}. No other images found: {image_details}")
+                else:
+                    logger.info(f"Image {index+1}. No other images found: {image_details}")
             logger.info("Cloud interpolation process completed successfully.")
         else:
             logger.info(f"Cloud interpolation is skipped.")
 
-        files: List[str] = os.listdir(self.folders[FolderType.CLEANED])
-        filtered_files = [
-            os.path.join(self.folders[FolderType.CLEANED], file) for file in files if re.match(r"^\d+\.", file)
-        ]
-        for file_path in filtered_files:
-            self.shared.delete_file(path=file_path)
+        if self.interpolation:
+            files: List[str] = os.listdir(self.folders[FolderType.CLEANED])
+            filtered_files = [
+                os.path.join(self.folders[FolderType.CLEANED], file) for file in files if re.match(r"^\d+\.", file)
+            ]
+            for file_path in filtered_files:
+                self.shared.delete_file(path=file_path)
         return
 
     @staticmethod
@@ -279,16 +283,7 @@ class Merge:
                 )
                 processed_bands.append(output_path)
 
-            parameters: List[str] = [
-                self.GDAL_MERGE,
-                "-n",
-                "0",
-                "-a_nodata",
-                "0",
-                "-separate",
-                "-o",
-                out_filename,
-            ]
+            parameters: List[str] = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
             veg_index_bands: List[str] = [processed_bands[0]] * 3
 
             merge_command.extend(parameters)
@@ -315,6 +310,10 @@ class Merge:
                 raster, raster_array = None, None
         self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
         logger.info("End of merging process")
+        # logger.info("Start Sleep")
+        # # TODO: REMOVE AFTER
+        # time.sleep(120)
+        # logger.info("End Sleep")
 
     def _cloud_warp(self, dest: str, src: str, res: int) -> None:
         gdal.Warp(
