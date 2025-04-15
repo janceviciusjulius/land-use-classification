@@ -4,34 +4,58 @@ import sys
 import time
 from tkinter import Tk
 from tkinter.filedialog import askopenfilenames
+from typing import Any, List, Dict
 
 import numpy as np
-import options
 from bs4 import BeautifulSoup
 from osgeo import gdal
+
+# from domain.shared import Shared
+# from schema.algorithm import Algorithm
+# from schema.folder_types import FolderType
+# from schema.metadata_types import ParametersJson
+#
+#
+# class PostProcessing:
+#     def __init__(self, shared: Shared):
+#         self.shared: Shared = shared
+#         self.files: List[str] = self.shared.choose_files_from_folder(algorithm=Algorithm.POST_PROCESSING)
+#         self.parameters: Dict[str, Any] = self.shared.get_parameters(files_paths=self.files)
+#         self.folders: Dict[FolderType, str] = self.parameters[ParametersJson.FOLDERS]
+#
+#     def post_process(self):
+#
+#         print(self.parameters)
+#
+#         print(self.folders)
+#
+#         self.shared.create_folder(path=self.folders[FolderType.POST_PROCESSED])
+#
+#         raise NotImplementedError()
 
 
 def ask_for_files():
     # Window where data files are chosen
     Tk().withdraw()
-    input_rasters = askopenfilenames(initialdir=options.return_path())
+    input_rasters = askopenfilenames()
     input_rasters = list(input_rasters)
     dir_name = os.path.dirname(input_rasters[0])
     if not input_rasters:
         print("No classification result file/files selected.")
         sys.exit(1)
-    for raster in input_rasters:
-        if "Classified" not in raster or "Categorized" in raster:
-            print("Please choose a file with classification water results.")
-            sys.exit(1)
+    # for raster in input_rasters:
+    #     if "Classified" not in raster or "Categorized" in raster:
+    #         print("Please choose a file with classification water results.")
+    #         sys.exit(1)
     return input_rasters, dir_name
 
 
 def create_folder_for_results(working_dir):
     post_folder = os.path.join(
         os.path.dirname(working_dir),
-        os.path.basename(working_dir.replace("Classified", "PostProcessed")),
+        os.path.basename(working_dir.replace("CLASSIFIED", "PostProcessed")),
     )
+    print(post_folder)
     if not os.path.exists(post_folder):
         os.mkdir(post_folder)
     else:
@@ -89,21 +113,21 @@ def get_month(filename):
 
 
 def post_processing(raster_list, classification_dir, result_dir):
-    raster_names_list = [os.path.basename(raster) for raster in os.listdir(result_dir)]
-    conf_files = [
-        os.path.join(classification_dir, conf_raster)
-        for conf_raster in os.listdir(classification_dir)
-        if conf_raster not in raster_list
-        and "ConfMap" in conf_raster
-        and conf_raster.replace("ConfMap", "Classified") in raster_names_list
-    ]
+    raster_names_list = []
+    conf_files = []
     try:
         print("\nStarting post-processing algorithms")
         for index, raster in enumerate(raster_list):
             for conf in conf_files:
-                if os.path.basename(raster).replace("Classified ", "") == os.path.basename(conf).replace(
-                    "ConfMap ", ""
+
+                print("1", os.path.basename(raster))
+                print("2", os.path.basename(conf))
+
+
+                if os.path.basename(raster).replace("CLASSIFIED ", "") == os.path.basename(conf).replace(
+                    "Confidence  ", ""
                 ):
+                    print("DARAU")
                     conf_raster = gdal.Open(conf, 1)
                     conf_raster_array = conf_raster.ReadAsArray().astype("float32")
                     raster_ = gdal.Open(raster, 1)

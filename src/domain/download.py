@@ -38,11 +38,14 @@ class Downloader:
     SENTINEL_PROCESSING_LEVEL: str = "S2MSI2A"
     B_to_GB: int = 1024 * 1024 * 1024
 
-    ZEMAITIJA: List[str] = ["34UDG", "34VDH", "34UEG", "34VEH"]
-    AUKSTAITIJA: List[str] = ["34VFH", "34UFG", "35VLC", "35ULB", "35UMB", "35VMC"]
-    SUVALKAI: List[str] = ["34UFF", "34UFE", "35ULA", "34UGE"]
-    DZUKAI: List[str] = ["35ULV", "35UMA", "35UMV"]
-    FOOTPRINT: List[str] = ZEMAITIJA + AUKSTAITIJA + SUVALKAI + DZUKAI
+    # ZEMAITIJA: List[str] = ["34UDG", "34VDH", "34UEG", "34VEH"]
+    # AUKSTAITIJA: List[str] = ["34VFH", "34UFG", "35VLC", "35ULB", "35UMB", "35VMC"]
+    # SUVALKAI: List[str] = ["34UFF", "34UFE", "35ULA", "34UGE"]
+    # DZUKAI: List[str] = ["35ULV", "35UMA", "35UMV"]
+    AUKSTAITIJA: List[str] = ["35ULB"]
+    ZEMAITIJA: List[str] = ["34UFG"]
+    SUVALKAI: List[str] = ["35ULA"]
+    FOOTPRINT: List[str] = AUKSTAITIJA + ZEMAITIJA + SUVALKAI
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared

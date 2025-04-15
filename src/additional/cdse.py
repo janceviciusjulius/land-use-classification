@@ -20,6 +20,8 @@ class CDSE:
     collection = None
     processing_level = None
 
+    __min_cloud_cover = 0
+
     def __init__(self, credentials=None):
         """
         credentials(optional): (username, password) tuple used for acquiring an access token from the identity server.
@@ -59,7 +61,8 @@ class CDSE:
             if footprint[0] == "shape":
                 shape = footprint[1]
                 json = requests.get(
-                    f"https://catalogue.dataspace.copernicus.eu/resto/api/collections/{self.collection}/search.json?startDate={start_date}&completionDate={end_date}&geometry={shape}&productType={self.processing_level}&cloudCover=[0,{cloudcover}]&maxRecords={page_size}&page={page}"
+                    f"https://catalogue.dataspace.copernicus.eu/resto/api/collections/{self.collection}/search.json?startDate={start_date}&com"
+                    f"pletionDate={end_date}&geometry={shape}&productType={self.processing_level}&cloudCover=[{self.__min_cloud_cover},{cloudcover}]&maxRecords={page_size}&page={page}"
                 ).json()
 
             elif footprint[0] == "tileid":
@@ -69,7 +72,8 @@ class CDSE:
 
                 for tile_id in tile_id_list:
                     response = requests.get(
-                        f"https://catalogue.dataspace.copernicus.eu/resto/api/collections/{self.collection}/search.json?startDate={start_date}&completionDate={end_date}&productType={self.processing_level}&cloudCover=[0,{cloudcover}]&maxRecords={page_size}&page={page}&tileId={tile_id}"
+                        f"https://catalogue.dataspace.copernicus.eu/resto/api/collections/{self.collection}/search.json?startDate={start_date}&completi"
+                        f"onDate={end_date}&productType={self.processing_level}&cloudCover=[{self.__min_cloud_cover},{cloudcover}]&maxRecords={page_size}&page={page}&tileId={tile_id}"
                     ).json()
 
                     json["features"].extend(response.get("features", []))

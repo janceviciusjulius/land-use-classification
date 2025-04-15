@@ -11,8 +11,10 @@ from osgeo.gdal import Dataset, Driver
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+from sklearn.preprocessing import StandardScaler
+from imblearn.combine import SMOTETomek
 
-# from sklearn.preprocessing import StandardScaler
+
 from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
@@ -39,8 +41,8 @@ configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 10
-    ESTIMATORS: int = 10
+    MAX_DEPTH: int = 8
+    ESTIMATORS: int = 20
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
@@ -61,7 +63,6 @@ class Classification:
 
         pbar: tqdm = tqdm(self.files, unit=UnitType.FILE)
         for index, file in enumerate(pbar):
-            pbar.set_description(f"Classifying {index+1} image")
             file_name: str = os.path.basename(str(file))
             file_month: int = self._get_month(file_name=file_name)
             output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
@@ -71,8 +72,10 @@ class Classification:
 
             month_map: Dict[int, Month] = self._month_map()
             month_enum: Month = month_map[file_month]
-            model = self._load_model(month=month_enum)
+            pbar.set_description(f"Classifying {index+1} image with {month_enum} model")
 
+            model = self._load_model(month=month_enum)
+            print(model)
             ds: Any = gdal.Open(file, gdal.GA_ReadOnly)
             rows: int = ds.RasterYSize
             cols: int = ds.RasterXSize
@@ -179,9 +182,13 @@ class Classification:
             try:
                 train_df: DataFrame = pd.read_csv(train_library)
                 test_df: DataFrame = pd.read_csv(validation_library)
+                logger.info(f"Training count: {len(train_df)}")
+                logger.info(f"Validation count: {len(test_df)}")
 
                 train_df = train_df.dropna()
                 test_df = test_df.dropna()
+                logger.info(f"Training count after removing NULLs: {len(train_df)}")
+                logger.info(f"Validation count after removing NULLs: {len(test_df)}")
             except (FileNotFoundError, UnicodeDecodeError) as error:
                 logger.error(f"{error.__class__.__name__} on {train_library} library.")
                 logger.info(Constants.LINE)
@@ -192,18 +199,28 @@ class Classification:
             X_test: np.ndarray = test_df[[col for col in DataColumns]].values
             y_test: np.ndarray = test_df[LabelColumn.COD].values
 
-            # #
+            smt = SMOTETomek(random_state=42)
+            X_train, y_train = smt.fit_resample(X_train, y_train)
+
+            #
             # scaler = StandardScaler()
             # X_train = scaler.fit_transform(X_train)
             # X_test = scaler.transform(X_test)
-            # #
+            #
 
             filename: str = self.shared.file_from_path(path=train_library)
             filename_without_ext: str = self.shared.remove_ext(file=filename)
             model_filename = self.shared.add_file_ext(file_name=filename_without_ext, ext=FileType.PKL)
             model_path: str = os.path.join(self.shared.root_folders[RootFolders.MODEL_FOLDER], model_filename)
 
-            clf = RandomForestClassifier(n_estimators=self.ESTIMATORS, n_jobs=self.N_JOBS, max_depth=self.MAX_DEPTH)
+            class_weights = {11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 21: 1, 31: 1, 41: 1, 51: 0.001, 61: 1, 62: 1}
+            clf = RandomForestClassifier(
+                random_state=42,
+                class_weight=class_weights,
+                n_estimators=self.ESTIMATORS,
+                n_jobs=self.N_JOBS,
+                max_depth=self.MAX_DEPTH,
+            )
             clf.fit(X_train, y_train)
             y_pred_test: np.array = clf.predict(X_test)
 
@@ -269,6 +286,7 @@ class Classification:
 
     def _load_model(self, month: Month):
         try:
+            print(self.models[month])
             with open(self.models[month], FileMode.READ_B) as file:
                 return pickle.load(file)
         except (FileNotFoundError, pickle.UnpicklingError) as error:

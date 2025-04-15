@@ -9,4 +9,5 @@ class Name(str, Enum):
     DOWNLOAD = "Download Sentinel Data"
     JOIN = "Join/Crop"
     CLASSIFICATION = "Data Classification"
+    POST_PROCESSING = "Post Processing"
     CLOSE = "Close program"

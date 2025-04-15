@@ -6,6 +6,7 @@ from domain.classification import Classification
 from domain.download import Downloader
 from domain.join import Join
 from domain.merge import Merge
+from domain.postprocessing import PostProcessing
 from domain.shared import Shared
 from schema.constants import Constants
 from schema.names import Name
@@ -44,6 +45,13 @@ def classification_algorithm() -> None:
     return None
 
 
+def post_processing_algorithm() -> None:
+    shared: Shared = Shared()
+    post_processing: PostProcessing = PostProcessing(shared=shared)
+    post_processing.post_process()
+    return None
+
+
 def main_page():
     window = Tk()
     window.title(Name.TITLE)
@@ -53,13 +61,15 @@ def main_page():
     btn1 = Button(window, text=Name.DOWNLOAD, command=lambda: download_algorithm())
     btn2 = Button(window, text=Name.JOIN, command=lambda: join_algorithm())
     btn3 = Button(window, text=Name.CLASSIFICATION, command=lambda: classification_algorithm())
+    btn4 = Button(window, text=Name.POST_PROCESSING, command=lambda: post_processing_algorithm())
 
     btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
     btn2.grid(row=4, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
     btn3.grid(row=6, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
+    btn4.grid(row=8, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
 
     close_btn = Button(window, text=Name.CLOSE, command=window.destroy)
-    close_btn.grid(row=8, columnspan=2, padx=10, pady=10)
+    close_btn.grid(row=10, columnspan=2, padx=10, pady=10)
 
     window.mainloop()
 

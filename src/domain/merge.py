@@ -68,10 +68,10 @@ class Merge:
         self._create_folders()
         self._merge()
         self._set_band_names()
-        # self._cleaning_data()
+        self._cleaning_data()
         self._cloud_interpolation()
         self._count_indexes()
-        self._cleaning_data()
+        # self._cleaning_data()
         self.shared.delete_folder(self.folders[FolderType.MERGED])
         logger.warning("End of merge process.")
 
@@ -152,6 +152,7 @@ class Merge:
 
                             best_raster, best_raster_array = None, None
                             interpolation_raster, interpolation_raster_array = None, None
+
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
                         tile=image_details[0][CloudCoverageJson.TILE],

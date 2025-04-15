@@ -6,6 +6,7 @@ class Algorithm(str, Enum):
     MERGE = "merge"
     JOIN = "join"
     CLASSIFICATION = "classification"
+    POST_PROCESSING = "post-processing"
 
     def __str__(self) -> str:
         return self.value

@@ -12,6 +12,7 @@ class FolderType(str, Enum):
     JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
     CONFIDENCE = "CONFIDENCE"
+    POST_PROCESSED = "POST_PROCESSED"
 
     def __str__(self) -> str:
         return self.value
@@ -27,6 +28,7 @@ class FolderPrefix(str, Enum):
     JOINED = "JOINED"
     CLASSIFIED = "CLASSIFIED"
     CONFIDENCE = "CONFIDENCE"
+    POST_PROCESS = "POST_PROCESSED"
 
     def __str__(self) -> str:
         return self.value
