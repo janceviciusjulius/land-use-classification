@@ -19,6 +19,7 @@ scikit-learn = "*"
 tqdm = "*"
 requests = "*"
 gdal = "==3.10.0"
+imblearn = "*"
 
 [dev-packages]
 black = "*"

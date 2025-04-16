@@ -1,5 +1,15 @@
 import numpy as np
 
+from domain.shared import Shared
+
+
+class PostProcessing:
+
+    def __init__(self, shared: Shared):
+        self.shared: Shared = shared
+
+    def post_process(self):
+        raise NotImplementedError()
 
 def clauses(conf_arr, raster_arr, month):
     mask = np.logical_or.reduce(
