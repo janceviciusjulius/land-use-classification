@@ -5,4 +5,4 @@
 1. Data aquisition (in the improvement stage);
 2. Data pre-processing (in the improvement stage);
 3. Data classification (in the improvement stage);
-4. Data post-processing (in development stage);
+4. Data post-processing (in the development stage);
