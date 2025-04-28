@@ -151,7 +151,10 @@ class Merge:
                             best_raster.WriteArray(best_raster_array)
 
                             best_raster, best_raster_array = None, None
-                            interpolation_raster, interpolation_raster_array = None, None
+                            interpolation_raster, interpolation_raster_array = (
+                                None,
+                                None,
+                            )
 
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
@@ -284,7 +287,16 @@ class Merge:
                 )
                 processed_bands.append(output_path)
 
-            parameters: List[str] = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
+            parameters: List[str] = [
+                self.GDAL_MERGE,
+                "-n",
+                "0",
+                "-a_nodata",
+                "0",
+                "-separate",
+                "-o",
+                out_filename,
+            ]
             veg_index_bands: List[str] = [processed_bands[0]] * 3
 
             merge_command.extend(parameters)

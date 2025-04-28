@@ -5,16 +5,15 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+from imblearn.combine import SMOTETomek
 from loguru import logger
 from osgeo import gdal
 from osgeo.gdal import Dataset, Driver
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+from sklearn.metrics import (accuracy_score, cohen_kappa_score, f1_score,
+                             precision_score, recall_score)
 from sklearn.preprocessing import StandardScaler
-from imblearn.combine import SMOTETomek
-
-
 from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
@@ -72,10 +71,9 @@ class Classification:
 
             month_map: Dict[int, Month] = self._month_map()
             month_enum: Month = month_map[file_month]
-            pbar.set_description(f"Classifying {index+1} image with {month_enum} model")
+            pbar.set_description(f"Classifying {index+1} image with {month_enum.value.capitalize()} model")
 
             model = self._load_model(month=month_enum)
-            print(model)
             ds: Any = gdal.Open(file, gdal.GA_ReadOnly)
             rows: int = ds.RasterYSize
             cols: int = ds.RasterXSize
@@ -102,9 +100,18 @@ class Classification:
             confidence: np.array = self._remove_clouds(input_file=str(file), class_result=confidence)
             confidence: np.array = np.round(confidence, decimals=2)
 
-            self._createGeotiff(outRaster=output_path, dataG=class_result, transform=geo_trans, proj=proj)
             self._createGeotiff(
-                outRaster=conf_output_path, dataG=confidence, transform=geo_trans, proj=proj, data_type=gdal.GDT_Float32
+                outRaster=output_path,
+                dataG=class_result,
+                transform=geo_trans,
+                proj=proj,
+            )
+            self._createGeotiff(
+                outRaster=conf_output_path,
+                dataG=confidence,
+                transform=geo_trans,
+                proj=proj,
+                data_type=gdal.GDT_Float32,
             )
         logger.warning("End of classification process.")
         return None
@@ -213,7 +220,20 @@ class Classification:
             model_filename = self.shared.add_file_ext(file_name=filename_without_ext, ext=FileType.PKL)
             model_path: str = os.path.join(self.shared.root_folders[RootFolders.MODEL_FOLDER], model_filename)
 
-            class_weights = {11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 21: 1, 31: 1, 41: 1, 51: 0.001, 61: 1, 62: 1}
+            class_weights = {
+                11: 1,
+                12: 1,
+                13: 1,
+                14: 1,
+                15: 1,
+                16: 1,
+                21: 1,
+                31: 1,
+                41: 1,
+                51: 0.001,
+                61: 1,
+                62: 1,
+            }
             clf = RandomForestClassifier(
                 random_state=42,
                 class_weight=class_weights,
@@ -226,12 +246,23 @@ class Classification:
 
             accuracy: float | int = accuracy_score(y_test, y_pred_test)
             precision: float | int = precision_score(
-                y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0
+                y_test,
+                y_pred_test,
+                average=AccuracyMetrics.ACCURACY_WEIGHTED,
+                zero_division=0,
             )
             recall: float | int = recall_score(
-                y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0
+                y_test,
+                y_pred_test,
+                average=AccuracyMetrics.ACCURACY_WEIGHTED,
+                zero_division=0,
             )
-            f1: float | int = f1_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0)
+            f1: float | int = f1_score(
+                y_test,
+                y_pred_test,
+                average=AccuracyMetrics.ACCURACY_WEIGHTED,
+                zero_division=0,
+            )
             kappa: float | int = cohen_kappa_score(y_test, y_pred_test)
 
             general_info: str = f"{month.value.upper()} with MAX_DEPTH: {self.MAX_DEPTH} ESTIMATORS: {self.ESTIMATORS}"
@@ -286,7 +317,6 @@ class Classification:
 
     def _load_model(self, month: Month):
         try:
-            print(self.models[month])
             with open(self.models[month], FileMode.READ_B) as file:
                 return pickle.load(file)
         except (FileNotFoundError, pickle.UnpicklingError) as error:
