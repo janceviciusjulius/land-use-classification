@@ -25,7 +25,7 @@ juliusjancevicius@Juliuss-MBP Test % cd Programu-sistemu-modeliavimas-ir-kurimas
 juliusjancevicius@Juliuss-MBP Programu-sistemu-modeliavimas-ir-kurimas % 
 ```
 
-### 1. Method (Using pipenv).
+### 1. Method (Using pipenv)
 1.	First, install the pipenv library. This can be done with the command:
 ```python
 pip install pipenv
@@ -47,22 +47,24 @@ cd src
 pipenv run python main.py
 ```
 
-### 2. Method (Using standard pip).
+### 2. Method (Using standard pip)
 1.	Create a ```virtual environment```:
 ```
 python -m venv venv
 ```
-2. Aktyvuojame ```virtual environment```:
+
+2. Activate ```virtual environment```:
 > [!TIP]
 > MacOS/Linux: ```source venv/bin/activate```
 > 
 > Windows: ```venv\Scripts\activate```
 
-3. Idiegiame bibliotekas:
+3. Install the libraries:
 ```
 pip install -r requirements.txt
 ```
-4. Paleidžiame sistemą:
+
+4.	Launch the system:
 ```
 cd src
 python main.py
