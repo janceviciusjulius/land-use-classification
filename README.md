@@ -8,7 +8,7 @@ To run the system, it is important to download and install Python. You can do th
 > It is recommended to download any version of 3.11.X. Code written on 3.11.9.
 
 ## Satellite Data Access
-To download the necessary satellite data, you must create a free account on the Copernicus Data Space Ecosystem platform: [Copernicus Data Space Ecosystem](https://browser.dataspace.copernicus.eu).
+To download the necessary satellite data, you must create a free account on the ***Copernicus Data Space Ecosystem*** platform: [Copernicus Data Space Ecosystem](https://browser.dataspace.copernicus.eu).
 Registration is required to access and download Sentinel-2 Level 2A products.
 
 Alternatively, to streamline the setup process, you may use the account credentials provided for this demonstration. These credentials should be securely stored in the ```.env``` file located in the main project directory.
