@@ -2,7 +2,7 @@
 
 This repository contains a prototype system for land use classification using satellite imagery. It processes multispectral satellite data, applies machine learning algorithms, and classifies the land surface into distinct land use categories. The system is built to support the full workflow: from data preprocessing, feature extraction, model training, to final classification and visualization. This prototype aims to serve as a foundation for further research and development in remote sensing, environmental monitoring, and automated land use mapping.
 
-## Requiriments
+## Requirements
 To run the system, it is important to download and install Python. You can do this at:  https://www.python.org/downloads/. 
 > [!TIP]
 > It is recommended to download any version of 3.11.X. Code written on 3.11.9.
