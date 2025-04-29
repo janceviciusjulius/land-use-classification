@@ -155,35 +155,3 @@ class PostProcessing:
             )
         )
         return mask
-
-
-# def post_processing(raster_list, classification_dir, result_dir):
-#     raster_names_list = []
-#     conf_files = []
-#     try:
-#         print("\nStarting post-processing algorithms")
-#         for index, raster in enumerate(raster_list):
-#             for conf in conf_files:
-#
-#                 print("1", os.path.basename(raster))
-#                 print("2", os.path.basename(conf))
-#
-#                 if os.path.basename(raster).replace("CLASSIFIED ", "") == os.path.basename(conf).replace(
-#                     "Confidence  ", ""
-#                 ):
-#                     print("DARAU")
-#                     conf_raster = gdal.Open(conf, 1)
-#                     conf_raster_array = conf_raster.ReadAsArray().astype("float32")
-#                     raster_ = gdal.Open(raster, 1)
-#                     raster_array = raster_.ReadAsArray().astype("uint8")
-#                     month = get_month(filename=os.path.basename(raster))
-#                     mask = clauses(conf_arr=conf_raster_array, raster_arr=raster_array, month=month)
-#                     raster_array[mask == False] = 99
-#                     raster_.WriteArray(raster_array)
-#                     raster_, raster_array = None, None
-#                     conf_raster, conf_raster_array, mask = None, None, None
-#                     print(f"Successfully processed {index + 1} file", end="\n")
-#         rename_processed_files(result_dir=result_dir)
-#     except PermissionError as e:
-#         print("File from this folder is opened with another program.", e, sep="\n")
-#         sys.exit(1)
