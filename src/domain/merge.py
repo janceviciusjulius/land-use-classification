@@ -323,10 +323,6 @@ class Merge:
                 raster, raster_array = None, None
         self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
         logger.info("End of merging process")
-        # logger.info("Start Sleep")
-        # # TODO: REMOVE AFTER
-        # time.sleep(120)
-        # logger.info("End Sleep")
 
     def _cloud_warp(self, dest: str, src: str, res: int) -> None:
         gdal.Warp(
