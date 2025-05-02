@@ -7,8 +7,8 @@ from domain.download import Downloader
 from domain.join import Join
 from domain.merge import Merge
 from domain.postprocessing import PostProcessing
-from domain.validshp import ValidShp
 from domain.shared import Shared
+from domain.validshp import ValidShp
 from schema.constants import Constants
 from schema.names import Name
 
@@ -51,6 +51,7 @@ def post_processing_algorithm() -> None:
     post_processing: PostProcessing = PostProcessing(shared=shared)
     post_processing.post_process()
     return None
+
 
 def valid_shp_algorithm() -> None:
     shared: Shared = Shared()

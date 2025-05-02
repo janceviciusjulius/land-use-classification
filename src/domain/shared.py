@@ -93,22 +93,24 @@ class Shared:
 
     def choose_files_from_folder(self, algorithm: Algorithm) -> List[str]:
         self.clear_console()
+        shp_folder = self.root_folders[RootFolders.DATA_FOLDER]
+        data_folder = self.root_folders[RootFolders.SHP_FOLDER]
         match algorithm:
             case Algorithm.JOIN:
                 logger.info(f"Data joining/cropping algorithm")
                 logger.info("Please choose file/files which You want to join/crop")
-                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
+                return list(filedialog.askopenfilenames(initialdir=data_folder))
             case Algorithm.CLASSIFICATION:
                 logger.info(f"Data classification algorithm")
                 logger.info("Please choose file/files which You want to classify")
-                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
+                return list(filedialog.askopenfilenames(initialdir=data_folder))
             case Algorithm.SHP_VALID:
                 logger.info(f"Shape file validation algorithm")
                 logger.info("Please choose file/files which You want to validate and fix for circular error")
-                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.SHP_FOLDER]))
+                filetypes = (("ESRI Shapefile", "*.shp"), ("GeoPackage", "*.gpkg"))
+                return list(filedialog.askopenfilenames(initialdir=shp_folder, filetypes=filetypes))
             case _:
-                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
-
+                return list(filedialog.askopenfilenames(initialdir=data_folder))
 
     def choose_shp_from_folder(self) -> str:
         logger.info("Please choose .shp file for cropping...")

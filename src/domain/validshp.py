@@ -1,9 +1,9 @@
 import os.path
+import sys
 from typing import List
 
-from osgeo import ogr
-import sys
 from loguru import logger
+from osgeo import ogr
 
 from domain.shared import Shared
 from schema.algorithm import Algorithm
@@ -34,4 +34,3 @@ class ValidShp:
                 logger.error("Cannot fix file. File do not have GeometryRef information")
                 sys.exit(1)
         logger.warning("End of file correction")
-
