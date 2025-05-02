@@ -66,7 +66,7 @@ class Join:
             self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
             self.shared.check_if_file_exists(path=self.result_file_path)
             return self._join_none()
-        logger.info(f"Cropping job was successful!")
+        logger.info(f"End of joining/cropping job")
         return None
 
     @staticmethod

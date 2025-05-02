@@ -7,6 +7,7 @@ class Algorithm(str, Enum):
     JOIN = "join"
     CLASSIFICATION = "classification"
     POST_PROCESSING = "post-processing"
+    SHP_VALID = "shape validation"
 
     def __str__(self) -> str:
         return self.value

@@ -10,4 +10,5 @@ class Name(str, Enum):
     JOIN = "Join/Crop"
     CLASSIFICATION = "Data Classification"
     POST_PROCESSING = "Post Processing"
+    SHP_VALID = "ShapeFile Validation"
     CLOSE = "Close program"

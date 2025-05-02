@@ -97,11 +97,18 @@ class Shared:
             case Algorithm.JOIN:
                 logger.info(f"Data joining/cropping algorithm")
                 logger.info("Please choose file/files which You want to join/crop")
+                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
             case Algorithm.CLASSIFICATION:
                 logger.info(f"Data classification algorithm")
                 logger.info("Please choose file/files which You want to classify")
-        files_paths = list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
-        return files_paths
+                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
+            case Algorithm.SHP_VALID:
+                logger.info(f"Shape file validation algorithm")
+                logger.info("Please choose file/files which You want to validate and fix for circular error")
+                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.SHP_FOLDER]))
+            case _:
+                return list(filedialog.askopenfilenames(initialdir=self.root_folders[RootFolders.DATA_FOLDER]))
+
 
     def choose_shp_from_folder(self) -> str:
         logger.info("Please choose .shp file for cropping...")

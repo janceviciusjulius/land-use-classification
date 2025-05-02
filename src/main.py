@@ -69,15 +69,16 @@ def main_page():
     btn2 = Button(window, text=Name.JOIN, command=lambda: join_algorithm())
     btn3 = Button(window, text=Name.CLASSIFICATION, command=lambda: classification_algorithm())
     btn4 = Button(window, text=Name.POST_PROCESSING, command=lambda: post_processing_algorithm())
-    btn5 = Button(window, text=Name.POST_PROCESSING, command=lambda: post_processing_algorithm())
+    btn5 = Button(window, text=Name.SHP_VALID, command=lambda: valid_shp_algorithm())
 
     btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
     btn2.grid(row=4, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
     btn3.grid(row=6, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
     btn4.grid(row=8, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
+    btn5.grid(row=10, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
 
     close_btn = Button(window, text=Name.CLOSE, command=window.destroy)
-    close_btn.grid(row=10, columnspan=2, padx=10, pady=10)
+    close_btn.grid(row=12, columnspan=2, padx=10, pady=10)
 
     window.mainloop()
 
