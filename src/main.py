@@ -7,6 +7,7 @@ from domain.download import Downloader
 from domain.join import Join
 from domain.merge import Merge
 from domain.postprocessing import PostProcessing
+from domain.validshp import ValidShp
 from domain.shared import Shared
 from schema.constants import Constants
 from schema.names import Name
@@ -51,6 +52,12 @@ def post_processing_algorithm() -> None:
     post_processing.post_process()
     return None
 
+def valid_shp_algorithm() -> None:
+    shared: Shared = Shared()
+    valid_shp: ValidShp = ValidShp(shared=shared)
+    valid_shp.validate_shp()
+    return None
+
 
 def main_page():
     window = Tk()
@@ -62,6 +69,7 @@ def main_page():
     btn2 = Button(window, text=Name.JOIN, command=lambda: join_algorithm())
     btn3 = Button(window, text=Name.CLASSIFICATION, command=lambda: classification_algorithm())
     btn4 = Button(window, text=Name.POST_PROCESSING, command=lambda: post_processing_algorithm())
+    btn5 = Button(window, text=Name.POST_PROCESSING, command=lambda: post_processing_algorithm())
 
     btn1.grid(row=2, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
     btn2.grid(row=4, columnspan=2, padx=5, pady=5, sticky=Constants.STICKY)
