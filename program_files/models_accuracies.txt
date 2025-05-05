@@ -1,0 +1,8 @@
+FOREST with MAX_DEPTH: 20 ESTIMATORS: 100
+Accuracy on the test set: 98.14%
+Precision on the test set: 98.26%
+Recall on the test set: 98.14%
+F1-score on the test set: 98.18%
+Cohen's Kappa on the test set: 89.01%
+Model saved to: /Users/juliusjancevicius/Desktop/Intelektualios_informacines_sistemos/models/training_forest.pkl
+------------------------------------------------------

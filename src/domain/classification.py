@@ -1,7 +1,7 @@
 import os.path
 import pickle
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -17,9 +17,10 @@ from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
-from exceptions.exceptions import MonthExtractionException
+from exceptions.exceptions import MonthExtractionException, LibraryException
 from schema.accuracy_metrics import AccuracyMetrics
 from schema.algorithm import Algorithm
+from schema.classification_type import ClassificationType
 from schema.columns import DataColumns, LabelColumn
 from schema.constants import Constants
 from schema.file_modes import FileMode
@@ -39,14 +40,15 @@ configurate_logger()
 
 
 class Classification:
-    MAX_DEPTH: int = 8
-    ESTIMATORS: int = 20
+    MAX_DEPTH: int = 20
+    ESTIMATORS: int = 100
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
         self.files: List[str] = self.shared.choose_files_from_folder(algorithm=Algorithm.CLASSIFICATION)
+        self.model: ClassificationType = self._choose_classification_type()
         self.parameters: Dict[str, Any] = self.shared.get_parameters(files_paths=self.files)
         self.folders: Dict[FolderType, str] = self.parameters[ParametersJson.FOLDERS]
         self.models: Dict[Month, str] = {}
@@ -85,9 +87,6 @@ class Classification:
             array: np.array = np.stack(array, axis=2)
             array: np.array = np.reshape(array, [rows * cols, bands])
 
-            # scaler = StandardScaler()
-            # array = scaler.fit_transform(array)
-
             class_result: np.array = model.predict(array)
             probabilities: np.array = model.predict_proba(array)
             confidence: np.array = np.max(probabilities, axis=1)
@@ -99,18 +98,9 @@ class Classification:
             confidence: np.array = self._remove_clouds(input_file=str(file), class_result=confidence)
             confidence: np.array = np.round(confidence, decimals=2)
 
+            self._createGeotiff(outRaster=output_path, dataG=class_result, transform=geo_trans, proj=proj)
             self._createGeotiff(
-                outRaster=output_path,
-                dataG=class_result,
-                transform=geo_trans,
-                proj=proj,
-            )
-            self._createGeotiff(
-                outRaster=conf_output_path,
-                dataG=confidence,
-                transform=geo_trans,
-                proj=proj,
-                data_type=gdal.GDT_Float32,
+                outRaster=conf_output_path, dataG=confidence, transform=geo_trans, proj=proj, data_type=gdal.GDT_Float32
             )
         logger.warning("End of classification process.")
         return None
@@ -124,12 +114,7 @@ class Classification:
         return class_result
 
     def _createGeotiff(
-        self,
-        outRaster: str,
-        dataG: np.array,
-        transform: Any,
-        proj: Any,
-        data_type: int = gdal.GDT_Byte,
+        self, outRaster: str, dataG: np.array, transform: Any, proj: Any, data_type: int = gdal.GDT_Byte
     ):
         driver: Driver = gdal.GetDriverByName(Format.GTIFF)
         rowsG, colsG = dataG.shape
@@ -162,18 +147,30 @@ class Classification:
                 return False
             self.shared.clear_console()
 
-    @staticmethod
-    def _group_libraries(
-        all_libraries: List[str],
-    ) -> Dict[Month, Dict[LibraryType, str]]:
-        group_libraries: Dict[Month, Dict[LibraryType, str]] = {month: {} for month in Month}
-        for library in all_libraries:
-            library_name: str = os.path.basename(library)
-            for month in Month:
-                if str(month) in library_name.lower():
+    def _group_libraries(self, all_libraries: List[str]) -> Dict[Union[Month, str], Dict[LibraryType, str]]:
+        if self.model == ClassificationType.GROUND:
+            group_libraries: Dict[Month | ClassificationType, Dict[LibraryType, str]] = {month: {} for month in Month}
+            for library in all_libraries:
+                library_name: str = os.path.basename(library)
+                for month in Month:
+                    if str(month) in library_name.lower():
+                        for library_type in LibraryType:
+                            if str(library_type) in library_name.lower():
+                                group_libraries[month][library_type] = library
+        elif self.model in (ClassificationType.FOREST, ClassificationType.URBAN):
+            model_name = self.model.value.lower()
+            group_libraries: Dict[Month | ClassificationType, Dict[LibraryType, str]] = {self.model: {}}
+            for library in all_libraries:
+                library_name: str = os.path.basename(library)
+                if model_name in library_name.lower():
                     for library_type in LibraryType:
                         if str(library_type) in library_name.lower():
-                            group_libraries[month][library_type] = library
+                            group_libraries[self.model][library_type] = library
+        else:
+            raise LibraryException(
+                f"Cannot find group of training and validation" f" training sets for {self.model.value} model"
+            )
+        print({key: value for key, value in group_libraries.items() if value and len(value) == 2})
         return {key: value for key, value in group_libraries.items() if value and len(value) == 2}
 
     def _train_and_save_model(self) -> None:
@@ -219,49 +216,25 @@ class Classification:
             model_filename = self.shared.add_file_ext(file_name=filename_without_ext, ext=FileType.PKL)
             model_path: str = os.path.join(self.shared.root_folders[RootFolders.MODEL_FOLDER], model_filename)
 
-            class_weights = {
-                11: 1,
-                12: 1,
-                13: 1,
-                14: 1,
-                15: 1,
-                16: 1,
-                21: 1,
-                31: 1,
-                41: 1,
-                51: 0.001,
-                61: 1,
-                62: 1,
-            }
             clf = RandomForestClassifier(
                 random_state=42,
-                class_weight=class_weights,
                 n_estimators=self.ESTIMATORS,
                 n_jobs=self.N_JOBS,
                 max_depth=self.MAX_DEPTH,
+                min_samples_leaf=4,
+                min_samples_split=2,
             )
             clf.fit(X_train, y_train)
             y_pred_test: np.array = clf.predict(X_test)
 
             accuracy: float | int = accuracy_score(y_test, y_pred_test)
             precision: float | int = precision_score(
-                y_test,
-                y_pred_test,
-                average=AccuracyMetrics.ACCURACY_WEIGHTED,
-                zero_division=0,
+                y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0
             )
             recall: float | int = recall_score(
-                y_test,
-                y_pred_test,
-                average=AccuracyMetrics.ACCURACY_WEIGHTED,
-                zero_division=0,
+                y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0
             )
-            f1: float | int = f1_score(
-                y_test,
-                y_pred_test,
-                average=AccuracyMetrics.ACCURACY_WEIGHTED,
-                zero_division=0,
-            )
+            f1: float | int = f1_score(y_test, y_pred_test, average=AccuracyMetrics.ACCURACY_WEIGHTED, zero_division=0)
             kappa: float | int = cohen_kappa_score(y_test, y_pred_test)
 
             general_info: str = f"{month.value.upper()} with MAX_DEPTH: {self.MAX_DEPTH} ESTIMATORS: {self.ESTIMATORS}"
@@ -332,3 +305,19 @@ class Classification:
             if match:
                 return int(match.group(2))
         raise MonthExtractionException(f"Cannot extract month from {file_name}")
+
+    def _choose_classification_type(self):
+        class_type_mapper = {1: ClassificationType.GROUND, 2: ClassificationType.URBAN, 3: ClassificationType.FOREST}
+        while True:
+            try:
+                self._print_classification_types()
+                classification_type = int(input("Choose classification type: "))
+                return class_type_mapper[classification_type]
+            except (KeyError, ValueError):
+                self.shared.clear_console()
+                logger.error("Invalid classification type")
+
+    @staticmethod
+    def _print_classification_types():
+        for index, class_type in enumerate(ClassificationType):
+            print(f"{index+1}. {class_type}")

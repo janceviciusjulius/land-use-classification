@@ -93,8 +93,8 @@ class Shared:
 
     def choose_files_from_folder(self, algorithm: Algorithm) -> List[str]:
         self.clear_console()
-        shp_folder = self.root_folders[RootFolders.DATA_FOLDER]
-        data_folder = self.root_folders[RootFolders.SHP_FOLDER]
+        shp_folder = self.root_folders[RootFolders.SHP_FOLDER]
+        data_folder = self.root_folders[RootFolders.DATA_FOLDER]
         match algorithm:
             case Algorithm.JOIN:
                 logger.info(f"Data joining/cropping algorithm")

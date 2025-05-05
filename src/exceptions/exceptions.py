@@ -4,3 +4,7 @@ class InvalidParameterException(Exception):
 
 class MonthExtractionException(Exception):
     pass
+
+
+class LibraryException(Exception):
+    pass
