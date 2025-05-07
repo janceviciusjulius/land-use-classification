@@ -36,6 +36,7 @@ def join_algorithm() -> None:
     shared: Shared = Shared()
     join: Join = Join(shared=shared)
     join.join()
+
     return None
 
 

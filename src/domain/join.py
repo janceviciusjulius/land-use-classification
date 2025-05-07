@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from loguru import logger
 from osgeo import gdal, ogr
-from osgeo.ogr import DataSource, Layer
+from osgeo.ogr import Layer
 
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
@@ -66,7 +66,6 @@ class Join:
             self.result_file_path: str = os.path.join(self.folders[FolderType.JOINED], self.result_file_name)
             self.shared.check_if_file_exists(path=self.result_file_path)
             return self._join_none()
-        logger.info(f"End of joining/cropping job")
         return None
 
     @staticmethod
@@ -77,7 +76,7 @@ class Join:
         )
 
     def _get_keys_from_shp(self) -> List[str]:
-        source: DataSource = ogr.Open(self.shape_file)
+        source = ogr.Open(self.shape_file)
         layer: Layer = source.GetLayer()
         schema: List[str] = []
         layer_defn = layer.GetLayerDefn()
@@ -98,6 +97,7 @@ class Join:
                 callback_data=Constants.DOT,
             ),
         )
+        logger.info(f"End of joining/cropping job")
 
     def _join_object(self, clause: str):
         gdal.Warp(
@@ -113,6 +113,7 @@ class Join:
                 callback_data=Constants.DOT,
             ),
         )
+        logger.info(f"End of joining/cropping job")
 
     def _join_all(self) -> None:
         gdal.Warp(
@@ -128,6 +129,7 @@ class Join:
                 callback_data=Constants.DOT,
             ),
         )
+        logger.info(f"End of joining/cropping job")
 
     def _create_result_filename(self) -> str:
         start_date, end_date = (

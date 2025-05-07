@@ -51,7 +51,7 @@ class Classification:
         self.model: ClassificationType = self._choose_classification_type()
         self.parameters: Dict[str, Any] = self.shared.get_parameters(files_paths=self.files)
         self.folders: Dict[FolderType, str] = self.parameters[ParametersJson.FOLDERS]
-        self.models: Dict[Month, str] = {}
+        self.models: Dict[Month | ClassificationType, str] = {}
 
     def classify(self) -> None:
         if self._ask_for_relearning():
@@ -64,17 +64,23 @@ class Classification:
         pbar: tqdm = tqdm(self.files, unit=UnitType.FILE)
         for index, file in enumerate(pbar):
             file_name: str = os.path.basename(str(file))
-            file_month: int = self._get_month(file_name=file_name)
+
+            if self.model == ClassificationType.GROUND:
+                file_month: int = self._get_month(file_name=file_name)
+
+                month_map: Dict[int, Month] = self._month_map()
+                month_enum: Month = month_map[file_month]
+                pbar.set_description(f"Classifying {index + 1} image with {month_enum.value.capitalize()} model")
+                model = self._load_model(month=month_enum)
+            else:
+                model = self._load_model(month=self.model)
+                pbar.set_description(f"Classifying {index + 1} image with {self.model.value.capitalize()} model")
+
             output_path: str = os.path.join(self.folders[FolderType.CLASSIFIED], file_name)
 
             confidence_file_name: str = f"Confidence {file_name}"
             conf_output_path: str = os.path.join(self.folders[FolderType.CONFIDENCE], confidence_file_name)
 
-            month_map: Dict[int, Month] = self._month_map()
-            month_enum: Month = month_map[file_month]
-            pbar.set_description(f"Classifying {index+1} image with {month_enum.value.capitalize()} model")
-
-            model = self._load_model(month=month_enum)
             ds: Any = gdal.Open(file, gdal.GA_ReadOnly)
             rows: int = ds.RasterYSize
             cols: int = ds.RasterXSize
@@ -127,15 +133,21 @@ class Classification:
         rasterDS = None
 
     def _get_model_paths(self) -> Dict[Month, str]:
-        model_paths: Dict[Month, str] = {}
+        model_paths: Dict[Month | ClassificationType, str] = {}
         model_folder = self.shared.root_folders[RootFolders.MODEL_FOLDER]
 
-        for model_name in os.listdir(model_folder):
+        model_names = os.listdir(model_folder)
+
+        for model_name in model_names:
             model_path: str = os.path.join(model_folder, model_name)
             for month in Month:
                 if month.value in model_name.lower():
                     model_paths[month] = model_path
                     break
+            if ClassificationType.URBAN.value.lower() in model_name.lower():
+                model_paths[ClassificationType.URBAN] = model_path
+            if ClassificationType.FOREST.value.lower() in model_name.lower():
+                model_paths[ClassificationType.FOREST] = model_path
         return model_paths
 
     def _ask_for_relearning(self) -> bool:
@@ -170,7 +182,6 @@ class Classification:
             raise LibraryException(
                 f"Cannot find group of training and validation" f" training sets for {self.model.value} model"
             )
-        print({key: value for key, value in group_libraries.items() if value and len(value) == 2})
         return {key: value for key, value in group_libraries.items() if value and len(value) == 2}
 
     def _train_and_save_model(self) -> None:
@@ -178,6 +189,7 @@ class Classification:
         all_libraries: List[str] = self.shared.list_dir(dir_=self.shared.root_folders[RootFolders.LEARNING_FOLDER])
 
         grouped_libraries: Dict[Month, Dict[LibraryType, str]] = self._group_libraries(all_libraries=all_libraries)
+        print()
         for month, libraries_info in grouped_libraries.items():
             logger.info(f"Training {month}...")
             train_library: str = libraries_info[LibraryType.TRAIN]
@@ -287,12 +299,13 @@ class Classification:
         with open(file_path, FileMode.WRITE):
             pass
 
-    def _load_model(self, month: Month):
+    def _load_model(self, month: Month | ClassificationType):
         try:
             with open(self.models[month], FileMode.READ_B) as file:
                 return pickle.load(file)
         except (FileNotFoundError, pickle.UnpicklingError) as error:
             logger.error(f"{error.__class__.__name__} on {str(month)} model.")
+            return Nonez
 
     @staticmethod
     def _month_map() -> Dict[int, Month]:
