@@ -305,7 +305,7 @@ class Classification:
                 return pickle.load(file)
         except (FileNotFoundError, pickle.UnpicklingError) as error:
             logger.error(f"{error.__class__.__name__} on {str(month)} model.")
-            return Nonez
+            return None
 
     @staticmethod
     def _month_map() -> Dict[int, Month]:
