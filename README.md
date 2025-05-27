@@ -17,7 +17,7 @@ Alternatively, to streamline the setup process, you may use the account credenti
 
 ```bash
 USERNAME=julius.jancevicius@stud.vilniustech.lt
-PASSWORD=PASSWORD
+PASSWORD=TestinePaskyra123+
 ```
 
 ## Prototype Setup:
