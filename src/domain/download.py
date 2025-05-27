@@ -42,7 +42,7 @@ class Downloader:
     AUKSTAITIJA: List[str] = ["34VFH", "34UFG", "35VLC", "35ULB", "35UMB", "35VMC"]
     SUVALKAI: List[str] = ["34UFF", "34UFE", "35ULA", "34UGE"]
     DZUKAI: List[str] = ["35ULV", "35UMA", "35UMV"]
-    FOOTPRINT: List[str] = ["34UFG"]
+    FOOTPRINT: List[str] = ZEMAITIJA + AUKSTAITIJA + SUVALKAI + DZUKAI
 
     def __init__(self, shared: Shared):
         self.shared: Shared = shared
