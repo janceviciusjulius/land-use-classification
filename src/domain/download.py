@@ -83,7 +83,7 @@ class Downloader:
                     feature_list=info[DownloadInfo.FEATURES],
                     dir=self.folders[FolderType.DOWNLOAD],
                 )
-                sleep(0.5)
+                sleep(0.2)
                 self.files[Metadata.CLOUD_COVERAGE] = self.save_downloaded_files_id(
                     features=info[DownloadInfo.FEATURES_INFO]
                 )
@@ -93,7 +93,7 @@ class Downloader:
                     destination=self.folders[FolderType.ZIP],
                 )
                 self.shared.delete_folder(path=self.folders[FolderType.DOWNLOAD])
-                sleep(0.5)
+                sleep(0.2)
                 self.shared.create_folder(path=self.folders[FolderType.DOWNLOAD])
                 self._unpack_s2_bands(
                     source=self.folders[FolderType.ZIP],
