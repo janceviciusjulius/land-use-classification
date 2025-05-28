@@ -1,7 +1,6 @@
 import os
 import re
 import subprocess
-import time
 from os import listdir
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -112,14 +111,8 @@ class Merge:
             MNDWI: Optional[ndarray] = MNDWI.astype(ReadingType.INT16)
             write_MNDWI.WriteArray(MNDWI)
 
-            raster, band3, band4, band5, band11, band12 = (
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
+            raster, band3, band4 = None, None, None
+            band5, band11, band12 = None, None, None
             logger.info(f"Successfully counted indexes for {index + 1} file")
         logger.info("End of index counting process")
 
@@ -151,10 +144,7 @@ class Merge:
                             best_raster.WriteArray(best_raster_array)
 
                             best_raster, best_raster_array = None, None
-                            interpolation_raster, interpolation_raster_array = (
-                                None,
-                                None,
-                            )
+                            interpolation_raster, interpolation_raster_array = None, None
 
                     self._rename_interpolated_filename(
                         filename=image_details[0][CloudCoverageJson.FILENAME],
@@ -287,16 +277,7 @@ class Merge:
                 )
                 processed_bands.append(output_path)
 
-            parameters: List[str] = [
-                self.GDAL_MERGE,
-                "-n",
-                "0",
-                "-a_nodata",
-                "0",
-                "-separate",
-                "-o",
-                out_filename,
-            ]
+            parameters: List[str] = [self.GDAL_MERGE, "-n", "0", "-a_nodata", "0", "-separate", "-o", out_filename]
             veg_index_bands: List[str] = [processed_bands[0]] * 3
 
             merge_command.extend(parameters)

@@ -42,6 +42,10 @@ configurate_logger()
 class Classification:
     MAX_DEPTH: int = 20
     ESTIMATORS: int = 100
+    MIN_SAMPLE_LEAF = 4
+    MIN_SAMPLE_SPLIT = 2
+    RANDOM_STATE = 42
+
     N_JOBS: int = -1
     NO_DATA_VALUE: int = 0
 
@@ -137,7 +141,6 @@ class Classification:
         model_folder = self.shared.root_folders[RootFolders.MODEL_FOLDER]
 
         model_names = os.listdir(model_folder)
-
         for model_name in model_names:
             model_path: str = os.path.join(model_folder, model_name)
             for month in Month:
@@ -189,7 +192,6 @@ class Classification:
         all_libraries: List[str] = self.shared.list_dir(dir_=self.shared.root_folders[RootFolders.LEARNING_FOLDER])
 
         grouped_libraries: Dict[Month, Dict[LibraryType, str]] = self._group_libraries(all_libraries=all_libraries)
-        print()
         for month, libraries_info in grouped_libraries.items():
             logger.info(f"Training {month}...")
             train_library: str = libraries_info[LibraryType.TRAIN]
@@ -214,14 +216,12 @@ class Classification:
             X_test: np.ndarray = test_df[[col for col in DataColumns]].values
             y_test: np.ndarray = test_df[LabelColumn.COD].values
 
-            smt = SMOTETomek(random_state=42)
+            smt = SMOTETomek(random_state=self.RANDOM_STATE)
             X_train, y_train = smt.fit_resample(X_train, y_train)
 
-            #
             # scaler = StandardScaler()
             # X_train = scaler.fit_transform(X_train)
             # X_test = scaler.transform(X_test)
-            #
 
             filename: str = self.shared.file_from_path(path=train_library)
             filename_without_ext: str = self.shared.remove_ext(file=filename)
@@ -229,12 +229,12 @@ class Classification:
             model_path: str = os.path.join(self.shared.root_folders[RootFolders.MODEL_FOLDER], model_filename)
 
             clf = RandomForestClassifier(
-                random_state=42,
+                random_state=self.RANDOM_STATE,
                 n_estimators=self.ESTIMATORS,
                 n_jobs=self.N_JOBS,
                 max_depth=self.MAX_DEPTH,
-                min_samples_leaf=4,
-                min_samples_split=2,
+                min_samples_leaf=self.MIN_SAMPLE_LEAF,
+                min_samples_split=self.MIN_SAMPLE_SPLIT,
             )
             clf.fit(X_train, y_train)
             y_pred_test: np.array = clf.predict(X_test)
