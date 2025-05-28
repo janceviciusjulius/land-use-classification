@@ -11,13 +11,14 @@ from osgeo import gdal
 from osgeo.gdal import Dataset, Driver
 from pandas import DataFrame
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, cohen_kappa_score, f1_score, precision_score, recall_score
+from sklearn.metrics import (accuracy_score, cohen_kappa_score, f1_score,
+                             precision_score, recall_score)
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
 from additional.logger_configuration import configurate_logger
 from domain.shared import Shared
-from exceptions.exceptions import MonthExtractionException, LibraryException
+from exceptions.exceptions import LibraryException, MonthExtractionException
 from schema.accuracy_metrics import AccuracyMetrics
 from schema.algorithm import Algorithm
 from schema.classification_type import ClassificationType
