@@ -23,19 +23,19 @@ PASSWORD=TestinePaskyra123+
 ## Prototype Setup:
 Before beginning the system installation, it is important to perform a git clone and download the repository to your local machine. Using the terminal or command prompt, you must also navigate to the project directory. For example:
 ```
-juliusjancevicius@Juliuss-MBP ~ % cd Desktop 
-juliusjancevicius@Juliuss-MBP Desktop % mkdir Test
-juliusjancevicius@Juliuss-MBP Desktop % cd Test 
-juliusjancevicius@Juliuss-MBP Test % git clone git@github.com:janceviciusjulius/Programu-sistemu-modeliavimas-ir-kurimas.git
-Cloning into 'Programu-sistemu-modeliavimas-ir-kurimas'...
-remote: Enumerating objects: 202, done.
-remote: Counting objects: 100% (202/202), done.
-remote: Compressing objects: 100% (125/125), done.
-remote: Total 202 (delta 109), reused 161 (delta 71), pack-reused 0 (from 0)
-Receiving objects: 100% (202/202), 48.81 KiB | 476.00 KiB/s, done.
-Resolving deltas: 100% (109/109), done.
-juliusjancevicius@Juliuss-MBP Test % cd Programu-sistemu-modeliavimas-ir-kurimas
-juliusjancevicius@Juliuss-MBP Programu-sistemu-modeliavimas-ir-kurimas % 
+juliusjancevicius@Juliuss-MacBook-Pro ~ % cd Desktop 
+juliusjancevicius@Juliuss-MacBook-Pro Desktop % mkdir GitExample
+juliusjancevicius@Juliuss-MacBook-Pro Desktop % cd GitExample 
+juliusjancevicius@Juliuss-MacBook-Pro GitExample % git clone git@github.com:janceviciusjulius/land-use-classification.git
+Cloning into 'land-use-classification'...
+remote: Enumerating objects: 1283, done.
+remote: Counting objects: 100% (35/35), done.
+remote: Compressing objects: 100% (24/24), done.
+remote: Total 1283 (delta 18), reused 21 (delta 11), pack-reused 1248 (from 1)
+Receiving objects: 100% (1283/1283), 149.63 MiB | 14.09 MiB/s, done.
+Resolving deltas: 100% (834/834), done.
+juliusjancevicius@Juliuss-MacBook-Pro GitExample % cd land-use-classification 
+juliusjancevicius@Juliuss-MacBook-Pro land-use-classification % 
 ```
 
 ### 1. Method (Using pipenv)
