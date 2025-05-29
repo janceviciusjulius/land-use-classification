@@ -1,18 +1,18 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
-<qgis styleCategories="AllStyleCategories" maxScale="0" minScale="1e+08" version="3.36.3-Maidenhead" hasScaleBasedVisibilityFlag="0">
+<qgis hasScaleBasedVisibilityFlag="0" styleCategories="AllStyleCategories" maxScale="0" minScale="1e+08" version="3.36.3-Maidenhead">
   <flags>
     <Identifiable>1</Identifiable>
     <Removable>1</Removable>
     <Searchable>1</Searchable>
     <Private>0</Private>
   </flags>
-  <temporal enabled="0" fetchMode="0" mode="0">
+  <temporal enabled="0" mode="0" fetchMode="0">
     <fixedRange>
       <start></start>
       <end></end>
     </fixedRange>
   </temporal>
-  <elevation band="1" enabled="0" symbology="Line" zoffset="0" zscale="1">
+  <elevation band="1" enabled="0" zscale="1" symbology="Line" zoffset="0">
     <data-defined-properties>
       <Option type="Map">
         <Option value="" name="name" type="QString"/>
@@ -21,7 +21,7 @@
       </Option>
     </data-defined-properties>
     <profileLineSymbol>
-      <symbol alpha="1" name="" type="line" force_rhr="0" is_animated="0" frame_rate="10" clip_to_extent="1">
+      <symbol name="" is_animated="0" type="line" frame_rate="10" clip_to_extent="1" force_rhr="0" alpha="1">
         <data_defined_properties>
           <Option type="Map">
             <Option value="" name="name" type="QString"/>
@@ -29,7 +29,7 @@
             <Option value="collection" name="type" type="QString"/>
           </Option>
         </data_defined_properties>
-        <layer id="{678587cf-e6aa-4423-a475-688c2af7f90a}" locked="0" pass="0" enabled="1" class="SimpleLine">
+        <layer enabled="1" locked="0" class="SimpleLine" id="{678587cf-e6aa-4423-a475-688c2af7f90a}" pass="0">
           <Option type="Map">
             <Option value="0" name="align_dash_pattern" type="QString"/>
             <Option value="square" name="capstyle" type="QString"/>
@@ -70,7 +70,7 @@
       </symbol>
     </profileLineSymbol>
     <profileFillSymbol>
-      <symbol alpha="1" name="" type="fill" force_rhr="0" is_animated="0" frame_rate="10" clip_to_extent="1">
+      <symbol name="" is_animated="0" type="fill" frame_rate="10" clip_to_extent="1" force_rhr="0" alpha="1">
         <data_defined_properties>
           <Option type="Map">
             <Option value="" name="name" type="QString"/>
@@ -78,7 +78,7 @@
             <Option value="collection" name="type" type="QString"/>
           </Option>
         </data_defined_properties>
-        <layer id="{f7adb418-da0c-48a3-a1dc-d4d8f698d1e3}" locked="0" pass="0" enabled="1" class="SimpleFill">
+        <layer enabled="1" locked="0" class="SimpleFill" id="{f7adb418-da0c-48a3-a1dc-d4d8f698d1e3}" pass="0">
           <Option type="Map">
             <Option value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale" type="QString"/>
             <Option value="243,166,178,255,rgb:0.95294117647058818,0.65098039215686276,0.69803921568627447,1" name="color" type="QString"/>
@@ -121,9 +121,9 @@
   </pipe-data-defined-properties>
   <pipe>
     <provider>
-      <resampling zoomedOutResamplingMethod="nearestNeighbour" enabled="false" zoomedInResamplingMethod="nearestNeighbour" maxOversampling="2"/>
+      <resampling enabled="false" zoomedOutResamplingMethod="nearestNeighbour" maxOversampling="2" zoomedInResamplingMethod="nearestNeighbour"/>
     </provider>
-    <rasterrenderer band="1" type="paletted" nodataColor="" alphaBand="-1" opacity="1">
+    <rasterrenderer band="1" alphaBand="-1" type="paletted" opacity="1" nodataColor="">
       <rasterTransparency/>
       <minMaxOrigin>
         <limits>None</limits>
@@ -134,23 +134,23 @@
         <stdDevFactor>2</stdDevFactor>
       </minMaxOrigin>
       <colorPalette>
-        <paletteEntry alpha="255" label="Cultivated_meadows" value="11" color="#935d07"/>
-        <paletteEntry alpha="255" label="Stubble" value="13" color="#acca16"/>
-        <paletteEntry alpha="255" label="Intensive cultivated crops" value="16" color="#d7ff0d"/>
-        <paletteEntry alpha="255" label="Natural meadows" value="21" color="#3ba12e"/>
-        <paletteEntry alpha="255" label="Forest" value="31" color="#156801"/>
-        <paletteEntry alpha="255" label="Stagnant water" value="41" color="#101fc9"/>
-        <paletteEntry alpha="255" label="Urban areas" value="51" color="#840aff"/>
-        <paletteEntry alpha="255" label="Sand dune" value="61" color="#c7b10c"/>
-        <paletteEntry alpha="255" label="Peatland" value="62" color="#de181b"/>
-        <paletteEntry alpha="255" label="No Data" value="99" color="#000000"/>
+        <paletteEntry color="#935d07" value="11" label="Cultivated_meadows" alpha="255"/>
+        <paletteEntry color="#acca16" value="13" label="Stubble" alpha="255"/>
+        <paletteEntry color="#d7ff0d" value="16" label="Intensive cultivated crops" alpha="255"/>
+        <paletteEntry color="#3ba12e" value="21" label="Natural meadows" alpha="255"/>
+        <paletteEntry color="#156801" value="31" label="Forest" alpha="255"/>
+        <paletteEntry color="#101fc9" value="41" label="Stagnant water" alpha="255"/>
+        <paletteEntry color="#840aff" value="51" label="Urban areas" alpha="255"/>
+        <paletteEntry color="#c7b10c" value="61" label="Sand dune" alpha="255"/>
+        <paletteEntry color="#de181b" value="62" label="Peatland" alpha="255"/>
+        <paletteEntry color="#000000" value="99" label="No Data" alpha="255"/>
       </colorPalette>
       <colorramp name="[source]" type="randomcolors">
         <Option/>
       </colorramp>
     </rasterrenderer>
-    <brightnesscontrast gamma="1" contrast="0" brightness="0"/>
-    <huesaturation colorizeBlue="128" saturation="0" colorizeGreen="128" invertColors="0" colorizeOn="0" colorizeRed="255" colorizeStrength="100" grayscaleMode="0"/>
+    <brightnesscontrast brightness="0" contrast="0" gamma="1"/>
+    <huesaturation saturation="0" colorizeRed="255" colorizeStrength="100" colorizeBlue="128" grayscaleMode="0" colorizeOn="0" colorizeGreen="128" invertColors="0"/>
     <rasterresampler maxOversampling="2"/>
     <resamplingStage>resamplingFilter</resamplingStage>
   </pipe>
